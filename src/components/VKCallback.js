@@ -22,7 +22,7 @@ const VKCallback = () => {
 
           if (loginResponse.status === 200) {
             console.log("Успешный вход:", loginResponse.data);
-            navigate("/welcome"); // Перенаправляем на страницу приветствия
+            navigate("/profile"); // Перенаправляем на страницу приветствия
           } else {
             throw new Error("Пользователь не найден");
           }
@@ -38,7 +38,7 @@ const VKCallback = () => {
 
             if (registrationResponse.status === 200) {
               console.log("Пользователь зарегистрирован:", registrationResponse.data);
-              navigate("/welcome");
+              navigate("/profile");
             }
           } catch (registrationError) {
             console.error("Ошибка регистрации:", registrationError);
