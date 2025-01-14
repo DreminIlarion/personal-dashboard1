@@ -8,14 +8,13 @@ const VKCallback = () => {
   useEffect(() => {
     const handleVKCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const fullCode = urlParams.get("code"); // Извлекаем весь `code`
+      const fullCode = urlParams.get("code"); // Получаем полный код из URL
 
       if (fullCode) {
         const code = fullCode.split("&")[0]; // Обрезаем до `&state`
-        console.log("Извлеченный code:", code);
 
         try {
-          // Пробуем выполнить вход
+          // Пробуем выполнить вход через API
           const loginResponse = await axios.get(
             `https://registration-fastapi.onrender.com/vk/login?code=${code}`,
             { withCredentials: true }
@@ -23,14 +22,15 @@ const VKCallback = () => {
 
           if (loginResponse.status === 200) {
             console.log("Успешный вход:", loginResponse.data);
-            navigate("/welcome"); // Перенаправляем на защищенную страницу
+            navigate("/welcome"); // Перенаправляем на страницу приветствия
           } else {
             throw new Error("Пользователь не найден");
           }
         } catch (error) {
-          console.error("Пользователь не найден, выполняем регистрацию...");
+          console.error("Ошибка авторизации:", error);
 
           try {
+            // Выполняем регистрацию, если вход не удался
             const registrationResponse = await axios.get(
               `https://registration-fastapi.onrender.com/vk/registration?code=${code}`,
               { withCredentials: true }
@@ -38,21 +38,21 @@ const VKCallback = () => {
 
             if (registrationResponse.status === 200) {
               console.log("Пользователь зарегистрирован:", registrationResponse.data);
-              navigate("/welcome"); // Перенаправляем на защищенную страницу
+              navigate("/welcome");
             }
           } catch (registrationError) {
-            console.error("Ошибка при регистрации:", registrationError);
+            console.error("Ошибка регистрации:", registrationError);
           }
         }
       } else {
-        console.error("Не удалось извлечь код из URL.");
+        console.error("Код авторизации не найден в URL.");
       }
     };
 
     handleVKCallback();
   }, [navigate]);
 
-  return <div>Обрабатываем авторизацию...</div>;
+  return <div>Обрабатываем авторизацию через ВКонтакте...</div>;
 };
 
 export default VKCallback;

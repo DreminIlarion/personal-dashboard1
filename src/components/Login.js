@@ -86,7 +86,7 @@ const Login = () => {
           <span
             role="link"
             tabIndex={0}
-            onClick={() => navigate('/register')}
+            onClick={() => navigate('/vk')}
             className="cursor-pointer underline text-blue-600"
           >
             Зарегистрируйтесь
