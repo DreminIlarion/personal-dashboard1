@@ -2,10 +2,11 @@ import React, { useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+
 const VKCallback = () => {
   const navigate = useNavigate();
-
   const { updateUser } = useUser();
+
   useEffect(() => {
     const handleVKCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -57,7 +58,18 @@ const VKCallback = () => {
     handleVKCallback();
   }, [navigate, updateUser]);
 
-  return <div>Обрабатываем авторизацию через ВКонтакте...</div>;
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-700">
+      <div className="bg-white p-8 rounded-xl shadow-lg max-w-sm w-full">
+        <h2 className="text-xl font-semibold text-center text-gray-800 mb-6">
+          Обрабатываем авторизацию через ВКонтакте...
+        </h2>
+        <div className="flex justify-center items-center space-x-4">
+          <div className="w-16 h-16 border-4 border-t-transparent border-gray-300 rounded-full animate-spin"></div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default VKCallback;
