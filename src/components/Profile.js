@@ -1,28 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { useUser } from '../context/UserContext';
-import { Link } from 'react-router-dom';
-import { FaUserCircle } from 'react-icons/fa';
-import Form from './Form';
-import ClassifierForm from './MiniClassifier';
+import React, { useState, useEffect } from "react";
+import { useUser } from "../context/UserContext";
+import { Link } from "react-router-dom";
+import { FaUserCircle } from "react-icons/fa";
+import Form from "./Form";
+import ClassifierForm from "./MiniClassifier";
 
 const Profile = () => {
   const { user, logout, updateUser } = useUser();
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [isClassifierVisible, setIsClassifierVisible] = useState(false);
-  const [isMyDataVisible, setIsMyDataVisible] = useState(false); 
+  const [isMyDataVisible, setIsMyDataVisible] = useState(false);
   const [profileData, setProfileData] = useState(user || {});
 
-  // Загружаем данные из localStorage при монтировании компонента
+  // Загружаем данные пользователя из localStorage при монтировании
   useEffect(() => {
-    const storedData = JSON.parse(localStorage.getItem('profileData'));
+    const storedData = JSON.parse(localStorage.getItem("profileData"));
     if (storedData) {
       setProfileData(storedData);
     }
   }, []);
 
-  // Сохраняем данные в localStorage каждый раз, когда они изменяются
+  // Сохраняем данные пользователя в localStorage при изменении
   useEffect(() => {
-    localStorage.setItem('profileData', JSON.stringify(profileData));
+    localStorage.setItem("profileData", JSON.stringify(profileData));
   }, [profileData]);
 
   const toggleFormVisibility = () => {
@@ -45,18 +45,22 @@ const Profile = () => {
 
   const saveChanges = () => {
     updateUser(profileData);
-    alert('Профиль успешно обновлён!');
+    alert("Профиль успешно обновлён!");
   };
 
   return (
-    <div className="flex flex-col font-sans" >
+    <div className="flex flex-col font-sans">
       {/* Header */}
       <header className="w-full bg-blue-800 text-white shadow-md fixed top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Личный кабинет</h1>
           <div className="flex space-x-4">
-            <Link to="/help" className="hover:underline">Помощь</Link>
-            <Link to="/contact" className="hover:underline">Контакты</Link>
+            <Link to="/help" className="hover:underline">
+              Помощь
+            </Link>
+            <Link to="/contact" className="hover:underline">
+              Контакты
+            </Link>
           </div>
         </div>
       </header>
@@ -67,13 +71,17 @@ const Profile = () => {
           <div className="flex items-center px-6 py-4 border-b border-purple-700">
             <FaUserCircle className="text-3xl text-white mr-3" />
             {user ? (
-              <span className="text-xl font-semibold">{user.email}</span>
+              <span className="text-xl font-semibold">
+                {user.first_name || "Пользователь"}
+              </span>
             ) : (
-              <Link to="/login" className="text-white hover:underline">Войти</Link>
+              <Link to="/login" className="text-white hover:underline">
+                Войти
+              </Link>
             )}
           </div>
           <ul className="mt-4 flex-grow">
-            {/* Вкладка "Мои данные" */}
+            {/* Navigation Tabs */}
             {user && (
               <li className="mb-2">
                 <button
@@ -121,52 +129,78 @@ const Profile = () => {
         {/* Main Content */}
         <div
           className="flex-1 ml-64 p-8 flex flex-col items-center justify-center min-h-screen relative bg-cover bg-center"
-          style={{ backgroundImage: 'url(https://www.neoflex.ru/upload/iblock/ffb/24.jpg)' }}
+          style={{ backgroundImage: "url(https://www.neoflex.ru/upload/iblock/ffb/24.jpg)" }}
         >
-          <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50"></div> {/* Затемнение фона */}
-          
+          <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50"></div>
           <div className="w-full max-w-2xl relative z-10">
             {isMyDataVisible ? (
               <>
-                <h2 className="text-3xl font-bold mb-6 text-center text-white">Мои данные</h2>
+                <h2 className="text-3xl font-bold mb-6 text-center text-white">
+                  Мои данные
+                </h2>
                 <form className="space-y-4">
-                  <label htmlFor="first_name" className="block text-white">Имя:</label>
+                  <label htmlFor="first_name" className="block text-white">
+                    Имя:
+                  </label>
                   <input
                     type="text"
                     id="first_name"
                     name="first_name"
-                    value={profileData.first_name || ''}
-                    onChange={(e) => setProfileData({ ...profileData, first_name: e.target.value })}
+                    value={profileData.first_name || ""}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        first_name: e.target.value,
+                      })
+                    }
                     className="w-full p-2 rounded-md bg-gray-100 text-black"
                   />
-                  
-                  <label htmlFor="last_name" className="block text-white">Фамилия:</label>
+
+                  <label htmlFor="last_name" className="block text-white">
+                    Фамилия:
+                  </label>
                   <input
                     type="text"
                     id="last_name"
                     name="last_name"
-                    value={profileData.last_name || ''}
-                    onChange={(e) => setProfileData({ ...profileData, last_name: e.target.value })}
+                    value={profileData.last_name || ""}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        last_name: e.target.value,
+                      })
+                    }
                     className="w-full p-2 rounded-md bg-gray-100 text-black"
                   />
 
-                  <label htmlFor="dad_name" className="block text-white">Отчество:</label>
+                  <label htmlFor="dad_name" className="block text-white">
+                    Отчество:
+                  </label>
                   <input
                     type="text"
                     id="dad_name"
                     name="dad_name"
-                    value={profileData.dad_name || ''}
-                    onChange={(e) => setProfileData({ ...profileData, dad_name: e.target.value })}
+                    value={profileData.dad_name || ""}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        dad_name: e.target.value,
+                      })
+                    }
                     className="w-full p-2 rounded-md bg-gray-100 text-black"
                   />
 
-                  <label htmlFor="bio" className="block text-white">О себе:</label>
+                  <label htmlFor="bio" className="block text-white">
+                    О себе:
+                  </label>
                   <textarea
                     id="bio"
                     name="bio"
                     rows="4"
-                    value={profileData.bio || ''}
-                    onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                    value={profileData.bio || ""}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, bio: e.target.value })
+                    }
                     className="w-full p-2 rounded-md bg-gray-100 text-black resize-none"
                   ></textarea>
                 </form>
@@ -179,8 +213,13 @@ const Profile = () => {
               </>
             ) : isFormVisible ? (
               <>
-                <h2 className="text-3xl font-bold mb-6 text-center text-white">Predict</h2>
-                <p className="text-xl text-center mb-4 text-white">Здесь вы можете узнать свои шансы на поступление сразу по нескольким направлениям</p>
+                <h2 className="text-3xl font-bold mb-6 text-center text-white">
+                  Predict
+                </h2>
+                <p className="text-xl text-center mb-4 text-white">
+                  Здесь вы можете узнать свои шансы на поступление сразу по
+                  нескольким направлениям
+                </p>
                 <Form />
               </>
             ) : isClassifierVisible ? (
@@ -191,14 +230,22 @@ const Profile = () => {
               </div>
             ) : (
               <div className="w-full max-w-2xl text-center relative z-10">
-                <h2 className="text-3xl font-bold mb-6 text-white">Добро пожаловать!</h2>
-                <p className="text-xl mb-4 text-white">Слева в навигационном меню вы можете воспользоваться сервисом (predict), который рассчитает ваши шансы поступления на одну специальность. Если вы хотите видеть информацию по нескольким направлениям,
-                
-                  </p></div> )} </div> </div>
-
-
-</div>
-</div>
-); };
+                <h2 className="text-3xl font-bold mb-6 text-white">
+                  Добро пожаловать!
+                </h2>
+                <p className="text-xl mb-4 text-white">
+                  Слева в навигационном меню вы можете воспользоваться сервисом
+                  (predict), который рассчитает ваши шансы поступления на одну
+                  специальность. Если вы хотите видеть информацию по нескольким
+                  направлениям.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default Profile;

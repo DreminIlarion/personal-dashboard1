@@ -1,10 +1,11 @@
 import React, { useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import { useUser } from "../context/UserContext";
 const VKCallback = () => {
   const navigate = useNavigate();
 
+  const { updateUser } = useUser();
   useEffect(() => {
     const handleVKCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -22,6 +23,10 @@ const VKCallback = () => {
 
           if (loginResponse.status === 200) {
             console.log("Успешный вход:", loginResponse.data);
+
+            const userData = loginResponse.data;
+            updateUser(userData);
+
             navigate("/profile"); // Перенаправляем на страницу приветствия
           } else {
             throw new Error("Пользователь не найден");
@@ -50,7 +55,7 @@ const VKCallback = () => {
     };
 
     handleVKCallback();
-  }, [navigate]);
+  }, [navigate, updateUser]);
 
   return <div>Обрабатываем авторизацию через ВКонтакте...</div>;
 };
