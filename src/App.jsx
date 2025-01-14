@@ -7,6 +7,9 @@ import EditProfile from './components/EditProfile';
 import Register from './components/Register';
 import VK from './components/vk_vhod';
 
+import VKAuth from "./VKAuth";
+import VKCallback from "./VKCallback";
+import Welcome from "./Welcome";
 
 const App = () => {
   return (
@@ -20,6 +23,9 @@ const App = () => {
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/register" element={<VK />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/vk" element={<VKAuth />} />
+          <Route path="/vk/callback" element={<VKCallback />} />
+          <Route path="/welcome" element={<Welcome />} />
         </Routes>
       </Router>
     </UserProvider>
