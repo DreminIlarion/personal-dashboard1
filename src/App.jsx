@@ -7,9 +7,9 @@ import EditProfile from './components/EditProfile';
 import Register from './components/Register';
 import VK from './components/vk_vhod';
 
-import VKAuth from "./VKAuth";
-import VKCallback from "./VKCallback";
-import Welcome from "./Welcome";
+import VKAuth from "./components/VKAuth";
+import VKCallback from "./components/VKCallback";
+import Welcome from "./components/welcome";
 
 const App = () => {
   return (
