@@ -5,6 +5,8 @@ import Login from './components/Login';
 import Profile from './components/Profile';
 import EditProfile from './components/EditProfile';
 import Register from './components/Register';
+import VK from './components/vk_vhod';
+
 
 const App = () => {
   return (
@@ -12,10 +14,11 @@ const App = () => {
       <Router>
         <Routes>
           {/* Перенаправление с корневого пути на страницу профиля */}
+
           <Route path="/" element={<Navigate to="/profile" replace />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={<VK />} />
           <Route path="/login" element={<Login />} />
         </Routes>
       </Router>

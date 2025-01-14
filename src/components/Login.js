@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const { updateUser } = useUser(); // Получаем функцию для обновления контекста
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
