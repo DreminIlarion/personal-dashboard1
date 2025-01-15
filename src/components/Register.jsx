@@ -98,7 +98,7 @@ const handleRegister = async (e) => {
             <span
               role="link"
               tabIndex={0}
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/login')}
               className="cursor-pointer underline text-blue-600"
             >
               Войдите

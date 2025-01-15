@@ -86,10 +86,17 @@ const Login = () => {
           <span
             role="link"
             tabIndex={0}
-            onClick={() => navigate('/vk')}
+            onClick={() => navigate('/registration')}
             className="cursor-pointer underline text-blue-600"
           >
             Зарегистрируйтесь
+          </span> или <span
+            role="link"
+            tabIndex={0}
+            onClick={() => navigate('/vk')}
+            className="cursor-pointer underline text-blue-600"
+          >
+            Войдите через VK 
           </span>
         </p>
       </div>
