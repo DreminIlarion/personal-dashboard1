@@ -12,9 +12,10 @@ const Login = () => {
     const navigate = useNavigate();
 
     const setTokenInCookies = (accessToken, refreshToken) => {
-        document.cookie = `access_token=${accessToken}; path=/; Secure; HttpOnly`;
-        document.cookie = `refresh_token=${refreshToken}; path=/; Secure; HttpOnly`;
+        document.cookie = `access_token=${accessToken}; path=/; Secure; HttpOnly; SameSite=Strict`;
+        document.cookie = `refresh_token=${refreshToken}; path=/; Secure; HttpOnly; SameSite=Strict`;
     };
+    
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -47,7 +48,7 @@ const Login = () => {
                 setTokenInCookies(access_token, refresh_token);
                 
                 // Валидация токенов
-                await validateTokens(access_token, refresh_token);
+                
                 toast.success('Вход выполнен успешно!');
                 setTimeout(() => navigate('/profile'), 1500);
             } else {
@@ -63,37 +64,7 @@ const Login = () => {
     };
     
 
-    const validateTokens = async (accessToken, refreshToken) => {
-        try {
-            const accessResponse = await fetch(
-                `https://registration-fastapi.onrender.com/validate/jwt/access`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                    },
-                }
-            );
-
-            const refreshResponse = await fetch(
-                `https://registration-fastapi.onrender.com/validate/jwt/refresh`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${refreshToken}`,
-                    },
-                }
-            );
-
-            if (!accessResponse.ok || !refreshResponse.ok) {
-                toast.error('Ошибка валидации токенов. Пожалуйста, войдите снова.');
-                navigate('/login');
-            }
-        } catch (error) {
-            console.error('Ошибка при валидации токенов:', error);
-            toast.error('Ошибка сети. Проверьте соединение.');
-        }
-    };
+   
 
     const handleOAuthRedirect = async (provider) => {
         setIsLoading(true);
@@ -143,7 +114,7 @@ const Login = () => {
             }
 
             // Валидация токенов после успешной авторизации
-            await validateTokens(access_token, refresh_token);
+           
             setTimeout(() => navigate('/profile'), 1500);
         } catch (error) {
             console.error('Ошибка при авторизации через соцсеть:', error);

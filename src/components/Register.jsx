@@ -44,7 +44,7 @@ const Register = () => {
                 // Валидация токенов
                 await validateTokens(access_token, refresh_token);
                 toast.success('Регистрация успешна!');
-                setTimeout(() => navigate('/profile'), 1500);
+                setTimeout(() => navigate('/login'), 1500);
             } else {
                 const errorData = await response.json();
                 toast.error(`Ошибка регистрации: ${errorData.message || 'Попробуйте снова'}`);

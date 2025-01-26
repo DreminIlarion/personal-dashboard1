@@ -26,6 +26,7 @@ const Profile = () => {
       Cookies.remove("access_token");
       Cookies.remove("refresh_token");
       logout();
+      updateUser(null);  // Сбрасываем состояние пользователя после выхода
       alert("Выход выполнен успешно!");
     } catch (error) {
       console.error("Ошибка при выходе:", error);
@@ -38,6 +39,7 @@ const Profile = () => {
     const storedProfileData = localStorage.getItem("profileData");
     if (storedProfileData) {
       setProfileData(JSON.parse(storedProfileData)); // Загружаем данные из localStorage
+      updateUser(JSON.parse(storedProfileData)); // Обновляем состояние user в контексте
     } else {
       const fetchUserData = async () => {
         try {
@@ -58,6 +60,7 @@ const Profile = () => {
           );
           console.log("Данные от сервера:", response.data);
           setProfileData(response.data); // Устанавливаем полученные данные в состояние
+          updateUser(response.data); // Обновляем состояние user в контексте
         } catch (error) {
           console.error("Ошибка при загрузке данных:", error);
           if (error.response && error.response.status === 401) {
@@ -235,12 +238,9 @@ const Profile = () => {
                     value={profileData.phone_number || ""}
                     disabled={!isEditing} // Только если редактирование включено
                     onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        phone_number: e.target.value,
-                      })
+                      setProfileData({ ...profileData, phone_number: e.target.value })
                     }
-                    className="w-full p-2 rounded-md bg-gray-100 text-black"
+                    className="w-full p-2 text-black rounded"
                   />
                   <label htmlFor="first_name" className="block text-white">
                     Имя:
@@ -250,14 +250,11 @@ const Profile = () => {
                     id="first_name"
                     name="first_name"
                     value={profileData.first_name || ""}
-                    disabled={!isEditing} // Только если редактирование включено
+                    disabled={!isEditing}
                     onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        first_name: e.target.value,
-                      })
+                      setProfileData({ ...profileData, first_name: e.target.value })
                     }
-                    className="w-full p-2 rounded-md bg-gray-100 text-black"
+                    className="w-full p-2 text-black rounded"
                   />
                   <label htmlFor="last_name" className="block text-white">
                     Фамилия:
@@ -267,14 +264,11 @@ const Profile = () => {
                     id="last_name"
                     name="last_name"
                     value={profileData.last_name || ""}
-                    disabled={!isEditing} // Только если редактирование включено
+                    disabled={!isEditing}
                     onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        last_name: e.target.value,
-                      })
+                      setProfileData({ ...profileData, last_name: e.target.value })
                     }
-                    className="w-full p-2 rounded-md bg-gray-100 text-black"
+                    className="w-full p-2 text-black rounded"
                   />
                   <label htmlFor="dad_name" className="block text-white">
                     Отчество:
@@ -284,54 +278,62 @@ const Profile = () => {
                     id="dad_name"
                     name="dad_name"
                     value={profileData.dad_name || ""}
-                    disabled={!isEditing} // Только если редактирование включено
+                    disabled={!isEditing}
                     onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        dad_name: e.target.value,
-                      })
+                      setProfileData({ ...profileData, dad_name: e.target.value })
                     }
-                    className="w-full p-2 rounded-md bg-gray-100 text-black"
+                    className="w-full p-2 text-black rounded"
                   />
                   <label htmlFor="bio" className="block text-white">
-                    О себе:
+                    Биография:
                   </label>
                   <textarea
                     id="bio"
                     name="bio"
-                    rows="4"
                     value={profileData.bio || ""}
-                    disabled={!isEditing} // Только если редактирование включено
+                    disabled={!isEditing}
                     onChange={(e) =>
                       setProfileData({ ...profileData, bio: e.target.value })
                     }
-                    className="w-full p-2 rounded-md bg-gray-100 text-black resize-none"
-                  ></textarea>
-
-                  {isEditing ? (
-                    <button
-                      type="button"
-                      onClick={saveChanges}
-                      className="block w-full py-3 mt-6 text-white bg-purple-500 rounded-md hover:bg-green-600"
-                    >
-                      Сохранить изменения
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(true)} // Переключаем режим редактирования
-                      className="block w-full py-3 mt-6 text-white bg-blue-500 rounded-md hover:bg-blue-600"
-                    >
-                      Изменить данные
-                    </button>
-                  )}
+                    className="w-full p-2 text-black rounded"
+                  />
+                  <div className="flex space-x-4 mt-4">
+                    {isEditing ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={saveChanges}
+                          className="px-6 py-2 bg-green-500 hover:bg-green-700 text-white rounded"
+                        >
+                          Сохранить
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditing(false)}
+                          className="px-6 py-2 bg-gray-500 hover:bg-gray-700 text-white rounded"
+                        >
+                          Отмена
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(true)}
+                        className="px-6 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded"
+                      >
+                        Редактировать
+                      </button>
+                    )}
+                  </div>
                 </form>
               </>
             ) : isFormVisible ? (
               <Form />
             ) : isClassifierVisible ? (
               <ClassifierForm />
-            ) : null}
+            ) : (
+              <p className="text-white">Пожалуйста, выберите раздел.</p>
+            )}
           </div>
         </div>
       </div>
