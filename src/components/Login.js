@@ -12,8 +12,8 @@ const Login = () => {
     const navigate = useNavigate();
 
     const setTokenInCookies = (accessToken, refreshToken) => {
-        document.cookie = `access_token=${accessToken}; path=/; Secure; HttpOnly; SameSite=Strict`;
-        document.cookie = `refresh_token=${refreshToken}; path=/; Secure; HttpOnly; SameSite=Strict`;
+        document.cookie = `access=${accessToken}; path=/; Secure; HttpOnly; SameSite=Strict`;
+        document.cookie = `refresh=${refreshToken}; path=/; Secure; HttpOnly; SameSite=Strict`;
     };
     
 
@@ -39,16 +39,13 @@ const Login = () => {
             );
     
             if (response.ok) {
-                // Чтение JSON-ответа
-                const { access_token, refresh_token } = await response.json();
-                console.log('Access Token:', access_token);
-                console.log('Refresh Token:', refresh_token);
-                
+                const { access, refresh } = await response.json();
+                console.log('Access Token:', access);
+                console.log('Refresh Token:', refresh);
+    
                 // Устанавливаем токены в cookies
-                setTokenInCookies(access_token, refresh_token);
-                
-                // Валидация токенов
-                
+                setTokenInCookies(access, refresh);
+    
                 toast.success('Вход выполнен успешно!');
                 setTimeout(() => navigate('/profile'), 1500);
             } else {
@@ -62,6 +59,7 @@ const Login = () => {
             setIsLoading(false);
         }
     };
+    
     
 
    
@@ -98,8 +96,8 @@ const Login = () => {
                 { method: 'GET' }
             );
 
-            const { access_token, refresh_token } = await response.json();
-            setTokenInCookies(access_token, refresh_token);
+            const { access, refresh } = await response.json();
+            setTokenInCookies(access, refresh);
 
             // В зависимости от того, является ли это регистрацией или авторизацией
             if (provider === 'vk') {
