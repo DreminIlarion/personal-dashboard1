@@ -1,91 +1,134 @@
 import React, { useState } from 'react';
-import styles from './Form.module.css';
+import Cookies from 'js-cookie'; // Для работы с куками
 
 const Form = () => {
   const [formData, setFormData] = useState({
     top_n: '',
-    user: {
-      gender: '',
-      age: '',
-      sport: '',
-      foreign: '',
-      gpa: '',
-      total_points: 0, // Начальное значение для ползунка
-      bonus_points: '',
-      exams: [],
-      education: '',
-      study_form: ''
-    }
+    gender: '',
+    age: '',
+    sport: '',
+    foreign: '',
+    gpa: '',
+    points: 0,
+    bonus_points: '',
+    exams: [],
+    reception_form: '',
+    priority: '',
+    education: '',
+    study_form: ''
   });
 
   const [responseMessage, setResponseMessage] = useState('');
-  const [recommendations, setRecommendations] = useState([]); // Состояние для направлений
-  const [isModalOpen, setIsModalOpen] = useState(false); // Состояние модального окна
+  const [recommendations, setRecommendations] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Хэндлер для изменений в форме
   const handleChange = (e) => {
-    if (e.target.name === 'exams') {
-      let newExams = [...formData.user.exams];
-      newExams.push(e.target.value);
-      setFormData({ ...formData, user: { ...formData.user, exams: newExams } });
-    } else {
-      setFormData({ ...formData, user: { ...formData.user, [e.target.name]: e.target.value } });
-    }
+    const { name, value } = e.target;
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
-  const egeExams = [
-    'Русский язык',
-    'Математика',
-    'Физика',
-    'Химия',
-    'Биология',
-    'Информатика',
-    'История',
-    'Обществознание',
-    'Литература',
-    'География',
-    'Иностранный язык',
-  ];
-
   const handleExamClick = (exam) => {
-    setFormData((prevFormData) => {
-      const updatedExams = prevFormData.user.exams.includes(exam)
-        ? prevFormData.user.exams.filter((item) => item !== exam)
-        : [...prevFormData.user.exams, exam];
-      return {
-        ...prevFormData,
-        user: {
-          ...prevFormData.user,
-          exams: updatedExams,
-        },
-      };
+    setFormData(prevFormData => {
+      const updatedExams = prevFormData.exams.includes(exam)
+        ? prevFormData.exams.filter(item => item !== exam)
+        : [...prevFormData.exams, exam];
+      return { ...prevFormData, exams: updatedExams };
     });
   };
 
+  // Функция для отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Отправляемые данные:', JSON.stringify(formData, null, 2));
-
+  
+    let accessToken = Cookies.get('access_token');  // Получаем токен из куков
+    console.log('Access Token:', accessToken);
+    
+    if (!accessToken) {
+      setResponseMessage('Токен не найден. Пожалуйста, авторизуйтесь.');
+      return;
+    }
+  
     try {
-      const response = await fetch(
-        'https://tyuiu-fastapi-recsys-production.up.railway.app/rec_sys/recommend/',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData, null, 2),
+      const response = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,  // Передаем токен в заголовке
+          
+        },
+        body: JSON.stringify(formData),
+        credentials: 'include',
+      });
+  
+      if (response.status === 401) {
+        console.log('Ошибка 401: Токен истёк, пытаемся обновить...');
+        // Если токен просрочен, попытаемся обновить его
+        const refreshToken = Cookies.get('refresh_token');
+        console.log('Refresh Token:', refreshToken);
+  
+        if (refreshToken) {
+          const refreshResponse = await fetch('https://personal-account-fastapi.onrender.com/refresh/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+            credentials: 'include',
+          });
+  
+          console.log('Ответ от запроса на обновление токена:', refreshResponse);
+          if (refreshResponse.ok) {
+            const refreshData = await refreshResponse.json();
+            console.log('Новый Access Token:', refreshData.access_token);
+            Cookies.set('access_token', refreshData.access_token);  // Сохраняем новый токен
+            accessToken = refreshData.access_token;  // Используем новый токен
+            
+            // Повторяем запрос
+            const retryResponse = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,  // Используем новый токен
+              },
+              body: JSON.stringify(formData),
+              credentials: 'include',
+            });
+  
+            if (!retryResponse.ok) {
+              throw new Error(`Ошибка HTTP: ${retryResponse.status}`);
+            }
+  
+            const data = await retryResponse.json();
+            console.log("Полученные данные:", data);
+  
+            if (data.status === 'ok') {
+              setResponseMessage('Данные успешно отправлены!');
+              setRecommendations(data.data);
+              setIsModalOpen(true);
+            } else {
+              setResponseMessage('Ошибка при обработке данных.');
+            }
+          } else {
+            throw new Error('Ошибка обновления токена');
+          }
+        } else {
+          setResponseMessage('Нет refresh токена для обновления');
         }
-      );
-
-      if (!response.ok) {
+      } else if (!response.ok) {
         throw new Error(`Ошибка HTTP: ${response.status}`);
       }
-
+  
       const data = await response.json();
+      console.log("Полученные данные:", data);
+  
       if (data.status === 'ok') {
         setResponseMessage('Данные успешно отправлены!');
-        setRecommendations(data.data); // Сохраняем направления в состоянии
-        setIsModalOpen(true); // Открываем модальное окно
+        setRecommendations(data.data);
+        setIsModalOpen(true);
       } else {
         setResponseMessage('Ошибка при обработке данных.');
       }
@@ -94,28 +137,30 @@ const Form = () => {
       setResponseMessage('Произошла ошибка при отправке данных.');
     }
   };
-
-  const closeModal = () => {
-    setIsModalOpen(false); // Закрыть модальное окно
-  };
+  
 
   return (
     <div className="container mx-auto p-6">
-      <form onSubmit={handleSubmit} className="bg-white p-8 shadow-xl rounded-lg w-full max-w-xl">
-        <label className="block mb-4 text-sm font-semibold">Количество направлений:
+      <form onSubmit={handleSubmit} className="bg-white p-8 shadow-xl rounded-lg w-full max-w-xl ml-7">
+        {/* Поле для количества направлений */}
+        <label className="block mb-4 text-sm font-semibold">
+          Количество направлений:
           <input
             type="number"
             value={formData.top_n}
-            onChange={(e) => setFormData({ ...formData, top_n: e.target.value })}
+            onChange={handleChange}
+            name="top_n"
             className="w-full p-2 mt-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
             required
           />
         </label>
 
+        {/* Поле для выбора пола */}
         <fieldset className="space-y-4 mb-6">
-          <label className="block text-sm font-semibold">Пол:
+          <label className="block text-sm font-semibold">
+            Пол:
             <select
-              value={formData.user.gender}
+              value={formData.gender}
               name="gender"
               onChange={handleChange}
               className="w-full p-2 mt-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
@@ -127,10 +172,12 @@ const Form = () => {
             </select>
           </label>
 
-          <label className="block text-sm font-semibold">Возраст:
+          {/* Поле для возраста */}
+          <label className="block text-sm font-semibold">
+            Возраст:
             <input
               type="number"
-              value={formData.user.age}
+              value={formData.age}
               name="age"
               onChange={handleChange}
               className="w-full p-2 mt-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
@@ -138,10 +185,12 @@ const Form = () => {
             />
           </label>
 
-          <label className="block text-sm font-semibold">Вид спорта:
+          {/* Поле для вида спорта */}
+          <label className="block text-sm font-semibold">
+            Вид спорта:
             <input
               type="text"
-              value={formData.user.sport}
+              value={formData.sport}
               name="sport"
               onChange={handleChange}
               className="w-full p-2 mt-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
@@ -149,11 +198,13 @@ const Form = () => {
             />
           </label>
 
-          <label className="block text-sm font-semibold">Средний балл (GPA):
+          {/* Поле для среднего балла GPA */}
+          <label className="block text-sm font-semibold">
+            Средний балл (GPA):
             <input
               type="number"
               step="0.01"
-              value={formData.user.gpa}
+              value={formData.gpa}
               name="gpa"
               onChange={handleChange}
               className="w-full p-2 mt-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
@@ -161,25 +212,27 @@ const Form = () => {
             />
           </label>
 
-          <label className="block text-sm font-semibold">Общее количество баллов:
+          {/* Поле для общего количества баллов */}
+          <label className="block text-sm font-semibold">
+            Общее количество баллов:
             <input
               type="range"
               min="0"
-              max="300"
+              max="310"
               step="1"
-              value={formData.user.total_points}
-              onChange={(e) =>
-                setFormData({ ...formData, user: { ...formData.user, total_points: e.target.value } })
-              }
+              value={formData.points}
+              onChange={(e) => setFormData({ ...formData, points: e.target.value })}
               className="w-full mt-2"
             />
-            <span className="text-sm">{formData.user.total_points} баллов</span>
+            <span className="text-sm">{formData.points} баллов</span>
           </label>
 
-          <label className="block text-sm font-semibold">Дополнительные баллы:
+          {/* Поле для дополнительных баллов */}
+          <label className="block text-sm font-semibold">
+            Дополнительные баллы:
             <input
               type="number"
-              value={formData.user.bonus_points}
+              value={formData.bonus_points}
               name="bonus_points"
               onChange={handleChange}
               className="w-full p-2 mt-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
@@ -187,14 +240,14 @@ const Form = () => {
             />
           </label>
 
-          <label className="block text-sm font-semibold">Выберите экзамены:
+          {/* Поле для выбора экзаменов */}
+          <label className="block text-sm font-semibold">
+            Выберите экзамены:
             <div className="grid grid-cols-2 gap-2 mt-2">
-              {egeExams.map((exam) => (
+              {['Русский язык', 'Математика', 'Физика', 'Химия', 'Биология', 'Информатика', 'История', 'Обществознание', 'Литература', 'География', 'Иностранный язык'].map((exam) => (
                 <div
                   key={exam}
-                  className={`p-2 border rounded-lg cursor-pointer ${
-                    formData.user.exams.includes(exam) ? 'bg-purple-500 text-white' : 'bg-gray-200'
-                  }`}
+                  className={`p-2 border rounded-lg cursor-pointer ${ formData.exams.includes(exam) ? 'bg-purple-500 text-white' : 'bg-gray-200' }`}
                   onClick={() => handleExamClick(exam)}
                 >
                   {exam}
@@ -203,7 +256,38 @@ const Form = () => {
             </div>
           </label>
 
-          <label className="block text-sm font-semibold">Вид образования:
+          {/* Поле для приоритета */}
+          <label className="block text-sm font-semibold">
+            Приоритет:
+            <input
+              type="number"
+              value={formData.priority}
+              name="priority"
+              onChange={handleChange}
+              className="w-full p-2 mt-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+              required
+            />
+          </label>
+
+          {/* Поле для выбора формы приема */}
+          <label className="block text-sm font-semibold">
+            Вид приема:
+            <select
+              value={formData.reception_form}
+              name="reception_form"
+              onChange={handleChange}
+              className="w-full p-2 mt-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+              required
+            >
+              <option value="">Выберите вид приема</option>
+              <option value="Общий конкурс">Общий конкурс</option>
+              <option value="По договору">По договору</option>
+            </select>
+          </label>
+
+          {/* Поле для выбора вида образования */}
+          <label className="block text-sm font-semibold">
+            Вид образования:
             <select
               value={formData.education}
               name="education"
@@ -218,10 +302,12 @@ const Form = () => {
             </select>
           </label>
 
-          <label className="block text-sm font-semibold">Форма обучения:
+          {/* Поле для выбора формы обучения */}
+          <label className="block text-sm font-semibold">
+            Форма обучения:
             <select
+              value={formData.study_form}
               name="study_form"
-              value={formData.user.study_form}
               onChange={handleChange}
               className="w-full p-2 mt-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
               required
@@ -234,31 +320,30 @@ const Form = () => {
           </label>
         </fieldset>
 
+        {/* Кнопка отправки формы */}
         <button type="submit" className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
           Рассчитать
         </button>
       </form>
 
-      {/* Модальное окно */}
+      {/* Модальное окно с рекомендациями */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
-        <div className="bg-white p-6 shadow-lg rounded-lg w-96 grid gap-4">
-          <div className="grid grid-cols-[auto_1fr_auto] items-center">
-            <span></span>
-            <h3 className="text-xl font-semibold">Результаты</h3>
-            <button className="p-2" onClick={closeModal}>
-            ✕
-            </button>
-          </div>
-          <div className="mt-4">
-            <ul className="space-y-2">
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-1/2">
+            <h2 className="text-2xl font-semibold mb-4">Рекомендации</h2>
+            <ul className="mb-4">
               {recommendations.map((item, index) => (
-                <li key={index}>{item.replace('Направление подготовки_', '')}</li>
+                <li key={index} className="mb-2">{item}</li>
               ))}
             </ul>
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="w-full bg-purple-600 text-white p-3 rounded-lg"
+            >
+              Закрыть
+            </button>
           </div>
         </div>
-      </div>
       )}
     </div>
   );

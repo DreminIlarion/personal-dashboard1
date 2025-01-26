@@ -1,113 +1,216 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
+import { FaVk, FaMailBulk, FaYandex } from 'react-icons/fa';
 
 const Register = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-  const navigate = useNavigate();
- 
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
-  
- 
+    const setTokenInCookies = (accessToken, refreshToken) => {
+        document.cookie = `access_token=${accessToken}; path=/; Secure; HttpOnly`;
+        document.cookie = `refresh_token=${refreshToken}; path=/; Secure; HttpOnly`;
+    };
 
-const handleRegister = async (e) => {
-  e.preventDefault();
-  try {
-      const response = await fetch('https://registration-fastapi.onrender.com/registration', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-              phone_number: phoneNumber,
-              email: email,
-              hash_password: password,
-             
-          }),
-          
-      });
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
 
-      if (response.ok) {
-          console.log('Registration successful');
-      } else {
-          console.error('Registration failed');
-      }
-  } catch (error) {
-      console.error('Error during registration:', error);
-  }
-};
+        const body = { 
+            phone_number: phoneNumber, 
+            email: email, 
+            hash_password: password 
+        };
 
+        // Убираем пустые значения
+        Object.keys(body).forEach(key => body[key] === '' && delete body[key]);
 
+        try {
+            const response = await fetch(
+                `https://registration-fastapi.onrender.com/authorization/registration`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                }
+            );
 
+            if (response.ok) {
+                const { access_token, refresh_token } = await response.json();
+                setTokenInCookies(access_token, refresh_token);
+                // Валидация токенов
+                await validateTokens(access_token, refresh_token);
+                toast.success('Регистрация успешна!');
+                setTimeout(() => navigate('/profile'), 1500);
+            } else {
+                const errorData = await response.json();
+                toast.error(`Ошибка регистрации: ${errorData.message || 'Попробуйте снова'}`);
+            }
+        } catch (error) {
+            console.error('Error during registration:', error);
+            toast.error('Ошибка сети. Проверьте соединение.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-    
+    const validateTokens = async (accessToken, refreshToken) => {
+        try {
+            const accessResponse = await fetch(
+                `https://registration-fastapi.onrender.com/validate/jwt/access`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                }
+            );
 
+            const refreshResponse = await fetch(
+                `https://registration-fastapi.onrender.com/validate/jwt/refresh`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${refreshToken}`,
+                    },
+                }
+            );
 
-  return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Регистрация</h2>
-        
-          
-            <form onSubmit={handleRegister}>
-              <div className="mb-4">
-                <label htmlFor="phone_number" className="block text-sm font-semibold mb-2">Номер телефона</label>
-                <input
-                  id="phone_number"
-                  type="tel"
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="email" className="block text-sm font-semibold mb-2">Электронная почта</label>
-                <input
-                  id="email"
-                  type="email"
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="mb-6">
-                <label htmlFor="password" className="block text-sm font-semibold mb-2">Пароль</label>
-                <input
-                  id="password"
-                  type="password"
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <br />
-              <button
-            type="submit"
-            className="w-full py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition"
-          >
-            Зарегистрироваться
-          </button>
-              </form>
-            
-         
-          
-          <p className="mt-4 text-center">
-            Уже есть аккаунт?
-            <span
-              role="link"
-              tabIndex={0}
-              onClick={() => navigate('/login')}
-              className="cursor-pointer underline text-blue-600"
-            >
-              Войдите
-            </span>
-          </p>
-       
-      </div>
-    </div>
-  );
+            if (!accessResponse.ok || !refreshResponse.ok) {
+                toast.error('Ошибка валидации токенов. Пожалуйста, войдите снова.');
+                navigate('/login');
+            }
+        } catch (error) {
+            console.error('Ошибка при валидации токенов:', error);
+            toast.error('Ошибка сети. Проверьте соединение.');
+        }
+    };
+
+    const handleOAuthRedirect = async (provider) => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(
+                `https://registration-fastapi.onrender.com/${provider}/link`,
+                { method: 'GET' }
+            );
+
+            const textResponse = await response.text();
+
+            if (response.ok && textResponse) {
+                const cleanLink = textResponse.replace(/^"|"$/g, '');
+                window.location.href = cleanLink;
+            } else {
+                toast.error('Ошибка получения ссылки.');
+            }
+        } catch (error) {
+            console.error('Ошибка при получении ссылки:', error);
+            toast.error('Ошибка сети. Проверьте соединение.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex justify-center items-center bg-gradient-to-r from-blue-500 to-purple-600">
+            <Toaster position="top-right" />
+            <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+                <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">Регистрация</h2>
+                <form onSubmit={handleRegister}>
+                    <div className="mb-6">
+                        <label htmlFor="email" className="block text-sm font-semibold mb-2 text-gray-700">
+                            Электронная почта
+                        </label>
+                        <input
+                            id="email"
+                            type="email"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Введите ваш email"
+                        />
+                    </div>
+
+                    <div className="mb-6">
+                        <label htmlFor="phone_number" className="block text-sm font-semibold mb-2 text-gray-700">
+                            Номер телефона
+                        </label>
+                        <input
+                            id="phone_number"
+                            type="tel"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            placeholder="Введите ваш номер телефона"
+                        />
+                    </div>
+
+                    <div className="mb-8">
+                        <label htmlFor="password" className="block text-sm font-semibold mb-2 text-gray-700">
+                            Пароль
+                        </label>
+                        <input
+                            id="password"
+                            type="password"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Введите пароль"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className={`w-full py-3 text-white font-bold rounded-lg transition ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Загрузка...' : 'Зарегистрироваться'}
+                    </button>
+                </form>
+
+                <div className="mt-6 text-center">
+                    <p className="text-sm font-medium mb-4 text-gray-700">Или зарегистрируйтесь через:</p>
+                    <div className="grid grid-cols-1 gap-4">
+                        <button
+                            onClick={() => handleOAuthRedirect('vk')}
+                            className="flex items-center justify-center py-4 w-full bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+                        >
+                            <FaVk size={24} className="mr-2" />
+                            Зарегистрироваться через ВКонтакте
+                        </button>
+                        <button
+                            onClick={() => handleOAuthRedirect('mail.ru')}
+                            className="flex items-center justify-center py-4 w-full bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition"
+                        >
+                            <FaMailBulk size={24} className="mr-2" />
+                            Зарегистрироваться через Mail.ru
+                        </button>
+                        <button
+                            onClick={() => handleOAuthRedirect('yandex')}
+                            className="flex items-center justify-center py-4 w-full bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition"
+                        >
+                            <FaYandex size={24} className="mr-2" />
+                            Зарегистрироваться через Яндекс
+                        </button>
+                    </div>
+                </div>
+
+                <p className="mt-6 text-center text-sm text-gray-700">
+                    Уже есть аккаунт?{' '}
+                    <span
+                        role="link"
+                        tabIndex={0}
+                        onClick={() => navigate('/login')}
+                        className="cursor-pointer underline text-blue-600 font-semibold"
+                    >
+                        Войдите
+                    </span>
+                </p>
+            </div>
+        </div>
+    );
 };
 
 export default Register;
