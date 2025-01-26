@@ -5,7 +5,7 @@ import { FaUserCircle } from "react-icons/fa";
 import Form from "./Form";
 import ClassifierForm from "./MiniClassifier";
 import axios from "axios";
-import Cookies from "js-cookie"; // Импортируем js-cookie
+import Cookies from "js-cookie";
 
 const Profile = () => {
   const { user, logout, updateUser } = useUser();
@@ -13,74 +13,61 @@ const Profile = () => {
   const [isClassifierVisible, setIsClassifierVisible] = useState(false);
   const [isMyDataVisible, setIsMyDataVisible] = useState(false);
   const [profileData, setProfileData] = useState(user || {});
-  const [isEditing, setIsEditing] = useState(false); // Для переключения между режимами просмотра и редактирования данных
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Функция для выхода
-  const handleLogout = async () => {
-    try {
-      await axios.post(
-        "https://registration-fastapi.onrender.com/authorization/logout",
-        {},
-        { withCredentials: true }
-      );
-      Cookies.remove("access_token");
-      Cookies.remove("refresh_token");
-      logout();
-      updateUser(null);  // Сбрасываем состояние пользователя после выхода
-      alert("Выход выполнен успешно!");
-    } catch (error) {
-      console.error("Ошибка при выходе:", error);
-      alert("Не удалось выполнить выход. Попробуйте еще раз.");
-    }
+  // Функция для выхода из аккаунта
+  const handleLogout = () => {
+    Cookies.remove("access");
+    Cookies.remove("refresh");
+    localStorage.removeItem("profileData"); // Удаляем данные профиля из localStorage
+    logout();
+    updateUser(null); // Сбрасываем состояние пользователя
+    alert("Вы успешно вышли из аккаунта.");
   };
 
-  // Загружаем данные пользователя из локального хранилища или с сервера при монтировании компонента
+  // Загружаем данные пользователя при монтировании компонента
   useEffect(() => {
-    const storedProfileData = localStorage.getItem("profileData");
-    if (storedProfileData) {
-      setProfileData(JSON.parse(storedProfileData)); // Загружаем данные из localStorage
-      updateUser(JSON.parse(storedProfileData)); // Обновляем состояние user в контексте
-    } else {
-      const fetchUserData = async () => {
-        try {
-          const accessToken = Cookies.get("access_token");
-          if (!accessToken) {
-            alert("Токен не найден. Пожалуйста, авторизуйтесь.");
-            return;
-          }
+    const fetchUserData = async () => {
+      const accessToken = Cookies.get("access");
 
-          const response = await axios.get(
-            "https://personal-account-fastapi.onrender.com/user_data/get/personal",
-            {
-              withCredentials: true,
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              },
-            }
-          );
-          console.log("Данные от сервера:", response.data);
-          setProfileData(response.data); // Устанавливаем полученные данные в состояние
-          updateUser(response.data); // Обновляем состояние user в контексте
-        } catch (error) {
-          console.error("Ошибка при загрузке данных:", error);
-          if (error.response && error.response.status === 401) {
-            alert("Ошибка авторизации. Пожалуйста, войдите в систему.");
-          } else {
-            alert("Не удалось загрузить данные пользователя.");
+      if (!accessToken) {
+        alert("Токен не найден. Пожалуйста, авторизуйтесь.");
+        logout();
+        updateUser(null);
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          "https://personal-account-fastapi.onrender.com/user_data/get/personal",
+          {
+            withCredentials: true,
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
           }
+        );
+        setProfileData(response.data); // Устанавливаем данные в состояние
+        updateUser(response.data); // Обновляем контекст пользователя
+      } catch (error) {
+        console.error("Ошибка при загрузке данных пользователя:", error);
+        if (error.response && error.response.status === 401) {
+          alert("Ошибка авторизации. Перенаправляем на страницу входа.");
+          logout();
+          updateUser(null);
         }
-      };
+      }
+    };
 
-      fetchUserData();
-    }
-  }, []); // Этот useEffect выполняется только один раз при монтировании
+    fetchUserData();
+  }, [logout, updateUser]);
 
-  // Сохраняем данные в localStorage при изменении
+  // Сохраняем данные профиля в localStorage при их изменении
   useEffect(() => {
     if (profileData) {
       localStorage.setItem("profileData", JSON.stringify(profileData));
     }
-  }, [profileData]); // Каждый раз при изменении данных сохраняем их в localStorage
+  }, [profileData]);
 
   const toggleFormVisibility = () => {
     setIsFormVisible(true);
@@ -100,7 +87,6 @@ const Profile = () => {
     setIsClassifierVisible(false);
   };
 
-  // Функция для отправки PUT-запроса на сервер для обновления данных
   const updateUserData = async (updatedData) => {
     const dataToSend = {
       phone_number: updatedData.phone_number || "",
@@ -116,22 +102,19 @@ const Profile = () => {
         dataToSend,
         { withCredentials: true }
       );
-
-      // Обновляем данные в состоянии после успешного ответа от сервера
-      setProfileData(response.data);
-      localStorage.setItem("profileData", JSON.stringify(response.data)); // Сохраняем в localStorage
+      setProfileData(response.data); // Обновляем данные в состоянии
+      localStorage.setItem("profileData", JSON.stringify(response.data));
       alert("Данные успешно обновлены");
-      setIsEditing(false); // Закрываем режим редактирования
+      setIsEditing(false);
     } catch (error) {
       console.error("Ошибка при обновлении данных:", error.response?.data || error);
-      alert("Не удалось обновить данные");
+      alert("Не удалось обновить данные.");
     }
   };
 
-  // Сохраняем изменения в профиле
   const saveChanges = async () => {
     try {
-      await updateUserData(profileData); // Отправляем данные на сервер
+      await updateUserData(profileData);
       alert("Профиль успешно обновлен!");
     } catch (error) {
       console.error("Ошибка сохранения данных:", error);
@@ -156,7 +139,7 @@ const Profile = () => {
       </header>
 
       <div className="flex flex-grow mt-16">
-        {/* Sidebar Navigation */}
+        {/* Sidebar */}
         <div className="w-64 h-screen fixed left-0 top-0 bg-gradient-to-br from-blue-600 to-purple-700 text-white shadow-lg flex flex-col pt-16">
           <div className="flex items-center px-6 py-4 border-b border-purple-700">
             <FaUserCircle className="text-3xl text-white mr-3" />
@@ -203,7 +186,7 @@ const Profile = () => {
               <li className="mb-2">
                 <button
                   onClick={handleLogout}
-                  className="text-red-500 hover:text-red-700"
+                  className="w-full px-6 py-3 text-left text-white bg-red-500 hover:bg-red-700 rounded focus:outline-none"
                 >
                   Выход
                 </button>
@@ -236,7 +219,7 @@ const Profile = () => {
                     id="phone_number"
                     name="phone_number"
                     value={profileData.phone_number || ""}
-                    disabled={!isEditing} // Только если редактирование включено
+                    disabled={!isEditing}
                     onChange={(e) =>
                       setProfileData({ ...profileData, phone_number: e.target.value })
                     }
@@ -296,32 +279,22 @@ const Profile = () => {
                       setProfileData({ ...profileData, bio: e.target.value })
                     }
                     className="w-full p-2 text-black rounded"
-                  />
-                  <div className="flex space-x-4 mt-4">
-                    {isEditing ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={saveChanges}
-                          className="px-6 py-2 bg-green-500 hover:bg-green-700 text-white rounded"
-                        >
-                          Сохранить
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsEditing(false)}
-                          className="px-6 py-2 bg-gray-500 hover:bg-gray-700 text-white rounded"
-                        >
-                          Отмена
-                        </button>
-                      </>
-                    ) : (
+                  ></textarea>
+                  <div className="flex space-x-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(!isEditing)}
+                      className="px-4 py-2 bg-yellow-500 text-white rounded"
+                    >
+                      {isEditing ? "Отменить" : "Редактировать"}
+                    </button>
+                    {isEditing && (
                       <button
                         type="button"
-                        onClick={() => setIsEditing(true)}
-                        className="px-6 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded"
+                        onClick={saveChanges}
+                        className="px-4 py-2 bg-green-500 text-white rounded"
                       >
-                        Редактировать
+                        Сохранить
                       </button>
                     )}
                   </div>
@@ -331,9 +304,7 @@ const Profile = () => {
               <Form />
             ) : isClassifierVisible ? (
               <ClassifierForm />
-            ) : (
-              <p className="text-white">Пожалуйста, выберите раздел.</p>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -342,3 +313,4 @@ const Profile = () => {
 };
 
 export default Profile;
+  

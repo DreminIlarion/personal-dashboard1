@@ -16,7 +16,7 @@ const App = () => {
   return (
     <UserProvider>
       <Router>
-        <Routes>
+      <Routes>
           {/* Перенаправление с корневого пути на страницу профиля */}
 
           <Route path="/" element={<Navigate to="/profile" replace />} />
