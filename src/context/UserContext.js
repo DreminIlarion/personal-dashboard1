@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import Cookies from 'js-cookie';  // Убедитесь, что библиотека js-cookie установлена
 
 // Создаем контекст
 const UserContext = createContext();
@@ -8,13 +9,87 @@ export const useUser = () => useContext(UserContext);
 
 // Функции для работы с cookies
 const setTokenInCookies = (accessToken, refreshToken) => {
-  document.cookie = `access=${accessToken}; path=/; Secure; HttpOnly; SameSite=Strict`;
-  document.cookie = `refresh=${refreshToken}; path=/; Secure; HttpOnly; SameSite=Strict`;
+  Cookies.set('access', accessToken, { path: '/', secure: true, sameSite: 'Strict' });
+  Cookies.set('refresh', refreshToken, { path: '/', secure: true, sameSite: 'Strict' });
 };
 
 const getTokenFromCookies = (tokenName) => {
-  const match = document.cookie.match(new RegExp('(^| )' + tokenName + '=([^;]+)'));
-  return match ? match[2] : null;
+  return Cookies.get(tokenName);
+};
+
+// Функции для авторизации
+const handleEmailLogin = async (email, password) => {
+  const response = await fetch('https://registration-fastapi.onrender.com/authorization/login/email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Login failed');
+  }
+
+  const data = await response.json();
+  setTokenInCookies(data.access_token, data.refresh_token);
+  return data;
+};
+
+const handlePhoneLogin = async (phoneNumber, password) => {
+  const response = await fetch('https://registration-fastapi.onrender.com/authorization/login/phone/number', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone_number: phoneNumber, password }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Login failed');
+  }
+
+  const data = await response.json();
+  setTokenInCookies(data.access_token, data.refresh_token);
+  return data;
+};
+
+const handleVkLogin = async () => {
+  const response = await fetch('https://registration-fastapi.onrender.com/vk/login', {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    throw new Error('VK login failed');
+  }
+
+  const data = await response.json();
+  setTokenInCookies(data.access_token, data.refresh_token);
+  return data;
+};
+
+const handleMailRuLogin = async () => {
+  const response = await fetch('https://registration-fastapi.onrender.com/mail.ru/login', {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    throw new Error('Mail.ru login failed');
+  }
+
+  const data = await response.json();
+  setTokenInCookies(data.access_token, data.refresh_token);
+  return data;
+};
+
+const handleYandexLogin = async () => {
+  const response = await fetch('https://registration-fastapi.onrender.com/yandex/login', {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    throw new Error('Yandex login failed');
+  }
+
+  const data = await response.json();
+  setTokenInCookies(data.access_token, data.refresh_token);
+  return data;
 };
 
 // Провайдер для управления состоянием пользователя
@@ -30,8 +105,8 @@ export const UserProvider = ({ children }) => {
   // Метод для выхода
   const logout = () => {
     setUser(null);
-    document.cookie = 'access=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/'; // Удаление токенов
-    document.cookie = 'refresh=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+    Cookies.remove('access');
+    Cookies.remove('refresh');
   };
 
   // Метод для обновления данных пользователя
@@ -40,14 +115,25 @@ export const UserProvider = ({ children }) => {
   // Загружаем данные пользователя при монтировании компонента
   useEffect(() => {
     const accessToken = getTokenFromCookies('access');
+    const refreshToken = getTokenFromCookies('refresh');
+    
+    // Создаем объект заголовков для запроса
+    const headers = {};
+    
     if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+    if (refreshToken) {
+      headers['Refresh-Token'] = `Bearer ${refreshToken}`;
+    }
+
+    if (accessToken || refreshToken) {
       // Здесь можно добавить логику получения данных пользователя с сервера по токену
       // Например, запрос к API для получения информации о пользователе
-      fetch('https://registration-fastapi.onrender.com/user', {
+      fetch('https://personal-account-fastapi.onrender.com/user_data/get/personal', {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: headers,  // передаем заголовки с токенами
+        credentials: 'include',
       })
         .then((response) => response.json())
         .then((data) => setUser(data))
@@ -61,35 +147,3 @@ export const UserProvider = ({ children }) => {
     </UserContext.Provider>
   );
 };
-
-// Функция для логина пользователя
-export const userLogin = async (email, password) => {
-  const response = await fetch('https://registration-fastapi.onrender.com/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Login failed');
-  }
-
-  const data = await response.json();
-  return data; // Возвращаем данные, включая токены
-};
-
-// Функция для регистрации нового пользователя
-export const userRegister = async (userData) => {
-  const response = await fetch('https://registration-fastapi.onrender.com/registration', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
-  });
-
-  if (!response.ok) {
-    throw new Error('Registration failed');
-  }
-
-  return response.json();
-};
-

@@ -42,7 +42,8 @@ const Register = () => {
                 const { access_token, refresh_token } = await response.json();
                 setTokenInCookies(access_token, refresh_token);
                 // Валидация токенов
-                await validateTokens(access_token, refresh_token);
+                
+                
                 toast.success('Регистрация успешна!');
                 setTimeout(() => navigate('/login'), 1500);
             } else {
@@ -57,37 +58,7 @@ const Register = () => {
         }
     };
 
-    const validateTokens = async (accessToken, refreshToken) => {
-        try {
-            const accessResponse = await fetch(
-                `https://registration-fastapi.onrender.com/validate/jwt/access`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                    },
-                }
-            );
-
-            const refreshResponse = await fetch(
-                `https://registration-fastapi.onrender.com/validate/jwt/refresh`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${refreshToken}`,
-                    },
-                }
-            );
-
-            if (!accessResponse.ok || !refreshResponse.ok) {
-                toast.error('Ошибка валидации токенов. Пожалуйста, войдите снова.');
-                navigate('/login');
-            }
-        } catch (error) {
-            console.error('Ошибка при валидации токенов:', error);
-            toast.error('Ошибка сети. Проверьте соединение.');
-        }
-    };
+    
 
     const handleOAuthRedirect = async (provider) => {
         setIsLoading(true);

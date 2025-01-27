@@ -5,79 +5,72 @@ import { FaUserCircle } from "react-icons/fa";
 import Form from "./Form";
 import ClassifierForm from "./MiniClassifier";
 import axios from "axios";
-import Cookies from "js-cookie"; // Импортируем js-cookie
+import Cookies from "js-cookie";
 
 const Profile = () => {
-  const { user, logout, updateUser } = useUser();
+  const { user, logout } = useUser();
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [isClassifierVisible, setIsClassifierVisible] = useState(false);
   const [isMyDataVisible, setIsMyDataVisible] = useState(false);
   const [profileData, setProfileData] = useState(user || {});
-  const [isEditing, setIsEditing] = useState(false); // Для переключения между режимами просмотра и редактирования данных
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Функция для выхода
-  const handleLogout = async () => {
-    try {
-      await axios.post(
-        "https://registration-fastapi.onrender.com/authorization/logout",
-        {},
-        { withCredentials: true }
-      );
-      Cookies.remove("access");
-      Cookies.remove("refresh");
-      logout();
-      alert("Выход выполнен успешно!");
-    } catch (error) {
-      console.error("Ошибка при выходе:", error);
-      alert("Не удалось выполнить выход. Попробуйте еще раз.");
-    }
+  const handleLogout = () => {
+    // Удаляем токены из cookies
+    Cookies.remove("access");
+    Cookies.remove("refresh");
+  
+    // Логика для выхода из приложения
+    logout(); // Убираем пользователя из состояния
+    console.log("Выход выполнен успешно!");
   };
+  
 
-  // Загружаем данные пользователя из локального хранилища или с сервера при монтировании компонента
   useEffect(() => {
-    const storedProfileData = localStorage.getItem("profileData");
-    if (storedProfileData) {
-      setProfileData(JSON.parse(storedProfileData)); // Загружаем данные из localStorage
-    } else {
-      const fetchUserData = async () => {
-        try {
-          const accessToken = Cookies.get("access");
-          if (!accessToken) {
-            alert("Токен не найден. Пожалуйста, авторизуйтесь.");
-            return;
-          }
-
-          const response = await axios.get(
-            "https://personal-account-fastapi.onrender.com/user_data/get/personal",
-            {
-              withCredentials: true,
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              },
-            }
-          );
-          console.log("Данные от сервера:", response.data);
-          setProfileData(response.data); // Устанавливаем полученные данные в состояние
-        } catch (error) {
-          console.error("Ошибка при загрузке данных:", error);
-          if (error.response && error.response.status === 401) {
-            alert("Ошибка авторизации. Пожалуйста, войдите в систему.");
-          } else {
-            alert("Не удалось загрузить данные пользователя.");
-          }
+    const fetchUserData = async () => {
+      try {
+        const accessToken = Cookies.get('access');
+        const refreshToken = Cookies.get('refresh');
+        
+        // Создаем объект заголовков для запроса
+        const headers = {};
+        
+        // Если есть access token, добавляем его в заголовки
+        if (accessToken) {
+          headers['Authorization'] = `Bearer ${accessToken}`;
         }
-      };
+        
+        // Если есть refresh token, добавляем его в заголовки
+        if (refreshToken) {
+          headers['Refresh-Token'] = `Bearer ${refreshToken}`;
+        }
+  
+        // Выполняем запрос
+        const response = await axios.get(
+          "https://personal-account-fastapi.onrender.com/user_data/get/personal",
+          {
+            withCredentials: true,
+            headers: headers,  // передаем заголовки с токенами
+          }
+        );
+  
+        console.log("Данные от сервера:", response.data);
+        setProfileData(response.data);
+      } catch (error) {
+        console.error("Ошибка при загрузке данных:", error);
+        if (error.response && error.response.status === 401) {
+          console.log("Ошибка авторизации. Пожалуйста, войдите в систему.");
+        } else {
+          console.log("Не удалось загрузить данные пользователя.");
+        }
+      }
+    };
+  
+    fetchUserData();
+  }, []);
+  
 
-      fetchUserData();
-    }
-  }, []); // Этот useEffect выполняется только один раз при монтировании
-
-  // Сохраняем данные в localStorage при изменении
-  useEffect(() => {
-    if (profileData) {
-      localStorage.setItem("profileData", JSON.stringify(profileData));
-    }
-  }, [profileData]); // Каждый раз при изменении данных сохраняем их в localStorage
+    
 
   const toggleFormVisibility = () => {
     setIsFormVisible(true);
@@ -97,7 +90,9 @@ const Profile = () => {
     setIsClassifierVisible(false);
   };
 
-  // Функция для отправки PUT-запроса на сервер для обновления данных
+ 
+
+
   const updateUserData = async (updatedData) => {
     const dataToSend = {
       phone_number: updatedData.phone_number || "",
@@ -105,6 +100,8 @@ const Profile = () => {
       last_name: updatedData.last_name,
       dad_name: updatedData.dad_name,
       bio: updatedData.bio,
+      birth_date: updatedData.birth_date || "", // Новое поле
+      address: updatedData.address || "", // Новое поле
     };
 
     try {
@@ -114,22 +111,19 @@ const Profile = () => {
         { withCredentials: true }
       );
 
-      // Обновляем данные в состоянии после успешного ответа от сервера
       setProfileData(response.data);
-      localStorage.setItem("profileData", JSON.stringify(response.data)); // Сохраняем в localStorage
-      alert("Данные успешно обновлены");
-      setIsEditing(false); // Закрываем режим редактирования
+      console.log("Данные успешно обновлены");
+      setIsEditing(false);
     } catch (error) {
-      console.error("Ошибка при обновлении данных:", error.response?.data || error);
-      alert("Не удалось обновить данные");
+      console.error("Ошибка при обновлении данных:", error);
+      console.log("Не удалось обновить данные");
     }
   };
 
-  // Сохраняем изменения в профиле
   const saveChanges = async () => {
     try {
-      await updateUserData(profileData); // Отправляем данные на сервер
-      alert("Профиль успешно обновлен!");
+      await updateUserData(profileData);
+      console.log("Профиль успешно обновлен!");
     } catch (error) {
       console.error("Ошибка сохранения данных:", error);
     }
@@ -137,7 +131,6 @@ const Profile = () => {
 
   return (
     <div className="flex flex-col font-sans">
-      {/* Header */}
       <header className="w-full bg-blue-800 text-white shadow-md fixed top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Личный кабинет</h1>
@@ -153,7 +146,6 @@ const Profile = () => {
       </header>
 
       <div className="flex flex-grow mt-16">
-        {/* Sidebar Navigation */}
         <div className="w-64 h-screen fixed left-0 top-0 bg-gradient-to-br from-blue-600 to-purple-700 text-white shadow-lg flex flex-col pt-16">
           <div className="flex items-center px-6 py-4 border-b border-purple-700">
             <FaUserCircle className="text-3xl text-white mr-3" />
@@ -198,21 +190,20 @@ const Profile = () => {
             </li>
             {user && (
               <li className="mb-2">
-                <button
-                  onClick={handleLogout}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  Выход
-                </button>
-              </li>
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-6 py-3    focus:outline-none focus:ring-2 "
+              >
+                Выход
+              </button>
+            </li>
             )}
           </ul>
           <div className="px-6 py-4 text-sm text-center border-t border-purple-700">
-            <p>© 2024 TIU</p>
+            <p>© 2025 TIU</p>
           </div>
         </div>
 
-        {/* Main Content */}
         <div
           className="flex-1 ml-64 p-8 flex flex-col items-center justify-center min-h-screen relative bg-cover bg-center"
           style={{ backgroundImage: "url(https://www.neoflex.ru/upload/iblock/ffb/24.jpg)" }}
@@ -231,9 +222,8 @@ const Profile = () => {
                   <input
                     type="text"
                     id="phone_number"
-                    name="phone_number"
                     value={profileData.phone_number || ""}
-                    disabled={!isEditing} // Только если редактирование включено
+                    disabled={!isEditing}
                     onChange={(e) =>
                       setProfileData({
                         ...profileData,
@@ -242,15 +232,15 @@ const Profile = () => {
                     }
                     className="w-full p-2 rounded-md bg-gray-100 text-black"
                   />
+
                   <label htmlFor="first_name" className="block text-white">
                     Имя:
                   </label>
                   <input
                     type="text"
                     id="first_name"
-                    name="first_name"
                     value={profileData.first_name || ""}
-                    disabled={!isEditing} // Только если редактирование включено
+                    disabled={!isEditing}
                     onChange={(e) =>
                       setProfileData({
                         ...profileData,
@@ -259,15 +249,15 @@ const Profile = () => {
                     }
                     className="w-full p-2 rounded-md bg-gray-100 text-black"
                   />
+
                   <label htmlFor="last_name" className="block text-white">
                     Фамилия:
                   </label>
                   <input
                     type="text"
                     id="last_name"
-                    name="last_name"
                     value={profileData.last_name || ""}
-                    disabled={!isEditing} // Только если редактирование включено
+                    disabled={!isEditing}
                     onChange={(e) =>
                       setProfileData({
                         ...profileData,
@@ -276,15 +266,15 @@ const Profile = () => {
                     }
                     className="w-full p-2 rounded-md bg-gray-100 text-black"
                   />
+
                   <label htmlFor="dad_name" className="block text-white">
                     Отчество:
                   </label>
                   <input
                     type="text"
                     id="dad_name"
-                    name="dad_name"
                     value={profileData.dad_name || ""}
-                    disabled={!isEditing} // Только если редактирование включено
+                    disabled={!isEditing}
                     onChange={(e) =>
                       setProfileData({
                         ...profileData,
@@ -293,20 +283,54 @@ const Profile = () => {
                     }
                     className="w-full p-2 rounded-md bg-gray-100 text-black"
                   />
+
                   <label htmlFor="bio" className="block text-white">
                     О себе:
                   </label>
                   <textarea
                     id="bio"
-                    name="bio"
                     rows="4"
                     value={profileData.bio || ""}
-                    disabled={!isEditing} // Только если редактирование включено
+                    disabled={!isEditing}
                     onChange={(e) =>
                       setProfileData({ ...profileData, bio: e.target.value })
                     }
                     className="w-full p-2 rounded-md bg-gray-100 text-black resize-none"
                   ></textarea>
+
+                  <label htmlFor="birth_date" className="block text-white">
+                    Дата рождения:
+                  </label>
+                  <input
+                    type="date"
+                    id="birth_date"
+                    value={profileData.birth_date || ""}
+                    disabled={!isEditing}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        birth_date: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 rounded-md bg-gray-100 text-black"
+                  />
+
+                  <label htmlFor="address" className="block text-white">
+                    Адрес:
+                  </label>
+                  <input
+                    type="text"
+                    id="address"
+                    value={profileData.address || ""}
+                    disabled={!isEditing}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        address: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 rounded-md bg-gray-100 text-black"
+                  />
 
                   {isEditing ? (
                     <button
@@ -319,10 +343,12 @@ const Profile = () => {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setIsEditing(true)} // Переключаем режим редактирования
+                      onClick={() => setIsEditing(true)}
                       className="block w-full py-3 mt-6 text-white bg-blue-500 rounded-md hover:bg-blue-600"
                     >
                       Изменить данные
+                   
+
                     </button>
                   )}
                 </form>

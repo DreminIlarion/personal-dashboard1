@@ -40,104 +40,42 @@ const Form = () => {
     });
   };
 
-  // Функция для отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    let accessToken = Cookies.get('access_token');  // Получаем токен из куков
-    console.log('Access Token:', accessToken);
-    
-    if (!accessToken) {
-      setResponseMessage('Токен не найден. Пожалуйста, авторизуйтесь.');
-      return;
-    }
-  
+    console.log('Отправка формы с данными:', formData);  // Логируем данные перед отправкой
+
     try {
       const response = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,  // Передаем токен в заголовке
-          
         },
         body: JSON.stringify(formData),
-        credentials: 'include',
+        credentials: 'include', // Это позволяет отправлять cookies с каждым запросом
       });
-  
-      if (response.status === 401) {
-        console.log('Ошибка 401: Токен истёк, пытаемся обновить...');
-        // Если токен просрочен, попытаемся обновить его
-        const refreshToken = Cookies.get('refresh_token');
-        console.log('Refresh Token:', refreshToken);
-  
-        if (refreshToken) {
-          const refreshResponse = await fetch('https://personal-account-fastapi.onrender.com/refresh/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ refresh_token: refreshToken }),
-            credentials: 'include',
-          });
-  
-          console.log('Ответ от запроса на обновление токена:', refreshResponse);
-          if (refreshResponse.ok) {
-            const refreshData = await refreshResponse.json();
-            console.log('Новый Access Token:', refreshData.access_token);
-            Cookies.set('access_token', refreshData.access_token);  // Сохраняем новый токен
-            accessToken = refreshData.access_token;  // Используем новый токен
-            
-            // Повторяем запрос
-            const retryResponse = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`,  // Используем новый токен
-              },
-              body: JSON.stringify(formData),
-              credentials: 'include',
-            });
-  
-            if (!retryResponse.ok) {
-              throw new Error(`Ошибка HTTP: ${retryResponse.status}`);
-            }
-  
-            const data = await retryResponse.json();
-            console.log("Полученные данные:", data);
-  
-            if (data.status === 'ok') {
-              setResponseMessage('Данные успешно отправлены!');
-              setRecommendations(data.data);
-              setIsModalOpen(true);
-            } else {
-              setResponseMessage('Ошибка при обработке данных.');
-            }
-          } else {
-            throw new Error('Ошибка обновления токена');
-          }
+      
+      console.log('Ответ сервера:', response);  // Логируем ответ от сервера
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Ответ с сервера:', data);  // Логируем данные от сервера
+
+        // Проверка на успешный статус
+        if (data.status === 'ok') {
+          setRecommendations(data.data);  // Ожидаем, что данные будут в поле 'data'
+          setIsModalOpen(true);  // Открытие модального окна с рекомендациями
         } else {
-          setResponseMessage('Нет refresh токена для обновления');
+          setResponseMessage('Ошибка при обработке данных.');
         }
-      } else if (!response.ok) {
-        throw new Error(`Ошибка HTTP: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      console.log("Полученные данные:", data);
-  
-      if (data.status === 'ok') {
-        setResponseMessage('Данные успешно отправлены!');
-        setRecommendations(data.data);
-        setIsModalOpen(true);
       } else {
-        setResponseMessage('Ошибка при обработке данных.');
+        console.log('Ошибка HTTP:', response.status);  // Логируем ошибку HTTP
+        setResponseMessage('Ошибка при отправке данных.');
       }
     } catch (error) {
       console.error('Ошибка отправки данных:', error);
       setResponseMessage('Произошла ошибка при отправке данных.');
     }
   };
-  
 
   return (
     <div className="container mx-auto p-6">
@@ -315,7 +253,6 @@ const Form = () => {
               <option value="">Выберите форму обучения</option>
               <option value="Очная">Очная</option>
               <option value="Заочная">Заочная</option>
-              <option value="Очно-заочная">Очно-заочная</option>
             </select>
           </label>
         </fieldset>
@@ -343,6 +280,13 @@ const Form = () => {
               Закрыть
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Сообщения о статусе */}
+      {responseMessage && (
+        <div className="mt-4 text-red-500">
+          {responseMessage}
         </div>
       )}
     </div>

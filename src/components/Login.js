@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { FaVk, FaMailBulk, FaYandex } from 'react-icons/fa';
-import { useUser } from "../context/UserContext";
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -13,12 +12,10 @@ const Login = () => {
     const navigate = useNavigate();
 
     const setTokenInCookies = (accessToken, refreshToken) => {
-        document.cookie = `access=${accessToken}; path=/; Secure; HttpOnly; SameSite=Strict`;
-        document.cookie = `refresh=${refreshToken}; path=/; Secure; HttpOnly; SameSite=Strict`;
+        document.cookie = `access=${accessToken}; path=/; Secure; SameSite=Strict`;
+        document.cookie = `refresh=${refreshToken}; path=/; Secure;  SameSite=Strict`;
+        console.log('Tokens set in cookies:', accessToken, refreshToken);
     };
-    
-
-    const { updateUser } = useUser(); // Получаем функцию обновления пользователя из контекста
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -42,14 +39,9 @@ const Login = () => {
             );
     
             if (response.ok) {
-                const { access, refresh, userData } = await response.json();
+                const { access, refresh } = await response.json();
                 setTokenInCookies(access, refresh);
-    
-                // Проверь данные пользователя
-                console.log('User data:', userData);
-    
-                updateUser(userData);
-    
+
                 toast.success('Вход выполнен успешно!');
                 setTimeout(() => navigate('/profile'), 1500);
             } else {
@@ -63,12 +55,6 @@ const Login = () => {
             setIsLoading(false);
         }
     };
-    
-
-    
-    
-
-   
 
     const handleOAuthRedirect = async (provider) => {
         setIsLoading(true);
@@ -105,20 +91,7 @@ const Login = () => {
             const { access, refresh } = await response.json();
             setTokenInCookies(access, refresh);
 
-            // В зависимости от того, является ли это регистрацией или авторизацией
-            if (provider === 'vk') {
-                await fetch(`https://registration-fastapi.onrender.com/vk/registration`, { method: 'GET' });
-                toast.success('Вход через ВКонтакте выполнен успешно!');
-            } else if (provider === 'mail.ru') {
-                await fetch(`https://registration-fastapi.onrender.com/mail.ru/registration`, { method: 'GET' });
-                toast.success('Вход через Mail.ru выполнен успешно!');
-            } else if (provider === 'yandex') {
-                await fetch(`https://registration-fastapi.onrender.com/yandex/registration`, { method: 'GET' });
-                toast.success('Вход через Яндекс выполнен успешно!');
-            }
-
-            // Валидация токенов после успешной авторизации
-           
+            toast.success(`Вход через ${provider} выполнен успешно!`);
             setTimeout(() => navigate('/profile'), 1500);
         } catch (error) {
             console.error('Ошибка при авторизации через соцсеть:', error);
