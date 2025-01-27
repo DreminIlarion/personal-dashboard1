@@ -13,39 +13,61 @@ const YandexCallback = () => {
       const code = urlParams.get("code");
 
       if (code) {
-        const code = code.split("&")[0];
         try {
-          const loginResponse = await axios.get(
-            `https://registration-fastapi.onrender.com/yandex/login?code=${code}`,
+          // 1. Получение access_token с помощью /yandex/get/token
+          const tokenResponse = await axios.get(
+            `https://registration-fastapi.onrender.com/yandex/get/token?code=${code}`,
             { withCredentials: true }
           );
 
-          if (loginResponse.status === 200) {
-            console.log("Успешный вход:", loginResponse.data);
+          if (tokenResponse.status === 200 && tokenResponse.data.access_token) {
+            const accessToken = tokenResponse.data.access_token;
 
-            const userData = loginResponse.data;
-            updateUser(userData);
+            try {
+              // 2. Попытка входа через /yandex/login
+              const loginResponse = await axios.get(
+                `https://registration-fastapi.onrender.com/yandex/login?access_token=${accessToken}`,
+                { withCredentials: true }
+              );
 
-            navigate("/profile");
-          } else {
-            throw new Error("Пользователь не найден");
-          }
-        } catch (error) {
-          console.error("Ошибка авторизации:", error);
+              if (loginResponse.status === 200) {
+                console.log("Успешный вход:", loginResponse.data);
 
-          try {
-            const registrationResponse = await axios.get(
-              `https://registration-fastapi.onrender.com/yandex/registration?code=${code}`,
-              { withCredentials: true }
-            );
+                const userData = loginResponse.data;
+                updateUser(userData);
 
-            if (registrationResponse.status === 200) {
-              console.log("Пользователь зарегистрирован:", registrationResponse.data);
-              navigate("/profile");
+                navigate("/profile");
+              } else {
+                throw new Error("Ошибка входа");
+              }
+            } catch (loginError) {
+              console.error("Ошибка входа:", loginError);
+
+              // 3. Если вход не удался, попытка регистрации через /yandex/registration
+              try {
+                const registrationResponse = await axios.get(
+                  `https://registration-fastapi.onrender.com/yandex/registration?access_token=${accessToken}`,
+                  { withCredentials: true }
+                );
+
+                if (registrationResponse.status === 200) {
+                  console.log("Пользователь зарегистрирован:", registrationResponse.data);
+                  const userData = registrationResponse.data;
+                  updateUser(userData);
+
+                  navigate("/profile");
+                } else {
+                  throw new Error("Ошибка регистрации");
+                }
+              } catch (registrationError) {
+                console.error("Ошибка регистрации:", registrationError);
+              }
             }
-          } catch (registrationError) {
-            console.error("Ошибка регистрации:", registrationError);
+          } else {
+            throw new Error("Не удалось получить access_token");
           }
+        } catch (tokenError) {
+          console.error("Ошибка получения access_token:", tokenError);
         }
       } else {
         console.error("Код авторизации не найден в URL.");
