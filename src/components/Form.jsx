@@ -34,8 +34,8 @@ useEffect(() => {
     const access = Cookies.get('access');
     const refresh = Cookies.get('refresh');
     
-    console.log('Access Token:', access || 'Нет токена');
-    console.log('Refresh Token:', refresh || 'Нет токена');
+    console.log('вот первый токен', access || 'Нет токена');
+    console.log('вот второй:', refresh || 'Нет токена');
   };
 
   // Логируем токены сразу при загрузке компонента
