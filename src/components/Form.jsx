@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import Cookies from 'js-cookie'; // Для работы с куками
 
 const Form = () => {
@@ -22,6 +22,34 @@ const Form = () => {
   const [recommendations, setRecommendations] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const setTokenInCookies = (accessToken, refreshToken) => {
+    document.cookie = `access=${accessToken}; path=/; Secure; SameSite=Strict`;
+    document.cookie = `refresh=${refreshToken}; path=/; Secure;  SameSite=Strict`;
+    console.log('Tokens set in cookies:', accessToken, refreshToken);
+};
+
+useEffect(() => {
+  // Функция для вывода токенов в консоль
+  const logTokens = () => {
+    const access = Cookies.get('access');
+    const refresh = Cookies.get('refresh');
+    
+    console.log('Access Token:', access || 'Нет токена');
+    console.log('Refresh Token:', refresh || 'Нет токена');
+  };
+
+  // Логируем токены сразу при загрузке компонента
+  logTokens();
+
+  // Устанавливаем интервал для логирования токенов каждые 15 секунд
+  const intervalId = setInterval(() => {
+    logTokens();
+  }, 15000); // 15000 мс = 15 секунд
+
+  // Очистить интервал при размонтировании компонента
+  return () => clearInterval(intervalId);
+}, []);
+
   // Хэндлер для изменений в форме
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,10 +68,11 @@ const Form = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e,accessToken, refreshToken) => {
     e.preventDefault();
-    console.log('Отправка формы с данными:', formData);  // Логируем данные перед отправкой
-
+    console.log('Отправка формы с данными:', formData);
+    
+    console.log(document.cookie);
     try {
       const response = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
         method: 'POST',
@@ -51,24 +80,23 @@ const Form = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
-        credentials: 'include', // Это позволяет отправлять cookies с каждым запросом
+        credentials: 'include',  // Это позволяет отправлять куки с запросом
       });
       
-      console.log('Ответ сервера:', response);  // Логируем ответ от сервера
-
+      console.log('Ответ сервера:', response);
+  
       if (response.ok) {
         const data = await response.json();
-        console.log('Ответ с сервера:', data);  // Логируем данные от сервера
-
-        // Проверка на успешный статус
+        console.log('Ответ с сервера:', data);
+  
         if (data.status === 'ok') {
-          setRecommendations(data.data);  // Ожидаем, что данные будут в поле 'data'
-          setIsModalOpen(true);  // Открытие модального окна с рекомендациями
+          setRecommendations(data.data);
+          setIsModalOpen(true);
         } else {
           setResponseMessage('Ошибка при обработке данных.');
         }
       } else {
-        console.log('Ошибка HTTP:', response.status);  // Логируем ошибку HTTP
+        console.log('Ошибка HTTP:', response.status);
         setResponseMessage('Ошибка при отправке данных.');
       }
     } catch (error) {
@@ -76,6 +104,7 @@ const Form = () => {
       setResponseMessage('Произошла ошибка при отправке данных.');
     }
   };
+  
 
   return (
     <div className="container mx-auto p-6">

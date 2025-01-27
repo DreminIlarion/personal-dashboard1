@@ -7,12 +7,12 @@ const UserContext = createContext();
 // Хук для использования контекста
 export const useUser = () => useContext(UserContext);
 
-// Функции для работы с cookies
+// Функции для работы с   
 const setTokenInCookies = (accessToken, refreshToken) => {
-  Cookies.set('access', accessToken, { path: '/', secure: true, sameSite: 'Strict' });
-  Cookies.set('refresh', refreshToken, { path: '/', secure: true, sameSite: 'Strict' });
+  document.cookie = `access=${accessToken}; path=/; Secure; SameSite=Strict`;
+  document.cookie = `refresh=${refreshToken}; path=/; Secure;  SameSite=Strict`;
+  console.log('Tokens set in cookies:', accessToken, refreshToken);
 };
-
 const getTokenFromCookies = (tokenName) => {
   return Cookies.get(tokenName);
 };
@@ -116,24 +116,24 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const accessToken = getTokenFromCookies('access');
     const refreshToken = getTokenFromCookies('refresh');
-    
+    console.log('00000000000000000000000000000000000000000000000000',accessToken,refreshToken);
     // Создаем объект заголовков для запроса
     const headers = {};
-    
+
     if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
+      headers['access'] = ` ${accessToken}`;
     }
     if (refreshToken) {
-      headers['Refresh-Token'] = `Bearer ${refreshToken}`;
+      headers['refresh'] = ` ${refreshToken}`;
     }
-
+  
     if (accessToken || refreshToken) {
       // Здесь можно добавить логику получения данных пользователя с сервера по токену
       // Например, запрос к API для получения информации о пользователе
       fetch('https://personal-account-fastapi.onrender.com/user_data/get/personal', {
-        method: 'GET',
+        method: 'GET', 
         headers: headers,  // передаем заголовки с токенами
-        credentials: 'include',
+        credentials: 'include',  
       })
         .then((response) => response.json())
         .then((data) => setUser(data))

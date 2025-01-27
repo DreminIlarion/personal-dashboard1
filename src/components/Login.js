@@ -29,6 +29,7 @@ const Login = () => {
             : '/authorization/login/email';
     
         try {
+            // Отправляем запрос на авторизацию
             const response = await fetch(
                 `https://registration-fastapi.onrender.com${loginEndpoint}`,
                 {
@@ -40,10 +41,34 @@ const Login = () => {
     
             if (response.ok) {
                 const { access, refresh } = await response.json();
+    
+                // Сохраняем токены в куки
                 setTokenInCookies(access, refresh);
-
-                toast.success('Вход выполнен успешно!');
-                setTimeout(() => navigate('/profile'), 1500);
+    
+                // Устанавливаем токены в заголовки для дальнейших запросов
+                const headers = {
+                    
+                    'Authorization': `Bearer ${access}`,  // Добавляем access_token
+                    'refresh-token': `Bearer ${refresh}`,  // Добавляем refresh_token
+                };
+    
+                // Например, если нужно отправить запрос с этими токенами
+                const profileResponse = await fetch('https://personal-account-fastapi.onrender.com/user_data/get/personal', {
+                    method: 'GET',
+                    headers: headers,
+                    credentials: 'include', // Убедитесь, что куки отправляются
+                });
+    
+                if (profileResponse.ok) {
+                    const userData = await profileResponse.json();
+                    console.log(userData);  // Обработка данных о пользователе
+    
+                    toast.success('Вход выполнен успешно!');
+                    setTimeout(() => navigate('/profile'), 1500);
+                } else {
+                    const errorData = await profileResponse.json();
+                    toast.error(`Ошибка при получении данных: ${errorData.message || 'Попробуйте снова'}`);
+                }
             } else {
                 const errorData = await response.json();
                 toast.error(`Ошибка входа: ${errorData.message || 'Попробуйте снова'}`);
@@ -55,6 +80,7 @@ const Login = () => {
             setIsLoading(false);
         }
     };
+    
 
     const handleOAuthRedirect = async (provider) => {
         setIsLoading(true);
