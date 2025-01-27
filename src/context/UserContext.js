@@ -11,7 +11,7 @@ export const useUser = () => useContext(UserContext);
 const setTokenInCookies = (accessToken, refreshToken) => {
   document.cookie = `access=${accessToken}; path=/; Secure; SameSite=Strict`;
   document.cookie = `refresh=${refreshToken}; path=/; Secure;  SameSite=Strict`;
-  console.log('Tokens set in cookies:', accessToken, refreshToken);
+  console.log('тут последний лог по сохранению в куках', accessToken, refreshToken);
 };
 const getTokenFromCookies = (tokenName) => {
   return Cookies.get(tokenName);
