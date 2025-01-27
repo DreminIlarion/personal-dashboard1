@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { FaVk, FaMailBulk, FaYandex } from 'react-icons/fa';
+import { useUser } from "../context/UserContext";
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -16,6 +17,8 @@ const Login = () => {
         document.cookie = `refresh=${refreshToken}; path=/; Secure; HttpOnly; SameSite=Strict`;
     };
     
+
+    const { updateUser } = useUser(); // Получаем функцию обновления пользователя из контекста
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -39,12 +42,13 @@ const Login = () => {
             );
     
             if (response.ok) {
-                const { access, refresh } = await response.json();
-                console.log('Access Token:', access);
-                console.log('Refresh Token:', refresh);
-    
-                // Устанавливаем токены в cookies
+                const { access, refresh, userData } = await response.json();
                 setTokenInCookies(access, refresh);
+    
+                // Проверь данные пользователя
+                console.log('User data:', userData);
+    
+                updateUser(userData);
     
                 toast.success('Вход выполнен успешно!');
                 setTimeout(() => navigate('/profile'), 1500);
@@ -59,6 +63,8 @@ const Login = () => {
             setIsLoading(false);
         }
     };
+    
+
     
     
 

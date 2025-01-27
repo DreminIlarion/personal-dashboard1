@@ -13,6 +13,7 @@ const YandexCallback = () => {
       const code = urlParams.get("code");
 
       if (code) {
+        const code = code.split("&")[0];
         try {
           const loginResponse = await axios.get(
             `https://registration-fastapi.onrender.com/yandex/login?code=${code}`,

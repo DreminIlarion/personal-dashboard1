@@ -5,7 +5,7 @@ import { FaUserCircle } from "react-icons/fa";
 import Form from "./Form";
 import ClassifierForm from "./MiniClassifier";
 import axios from "axios";
-import Cookies from "js-cookie";
+import Cookies from "js-cookie"; // Импортируем js-cookie
 
 const Profile = () => {
   const { user, logout, updateUser } = useUser();
@@ -13,61 +13,71 @@ const Profile = () => {
   const [isClassifierVisible, setIsClassifierVisible] = useState(false);
   const [isMyDataVisible, setIsMyDataVisible] = useState(false);
   const [profileData, setProfileData] = useState(user || {});
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // Для переключения между режимами просмотра и редактирования данных
 
-  // Функция для выхода из аккаунта
-  const handleLogout = () => {
-    Cookies.remove("access");
-    Cookies.remove("refresh");
-    localStorage.removeItem("profileData"); // Удаляем данные профиля из localStorage
-    logout();
-    updateUser(null); // Сбрасываем состояние пользователя
-    alert("Вы успешно вышли из аккаунта.");
+  // Функция для выхода
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        "https://registration-fastapi.onrender.com/authorization/logout",
+        {},
+        { withCredentials: true }
+      );
+      Cookies.remove("access");
+      Cookies.remove("refresh");
+      logout();
+      alert("Выход выполнен успешно!");
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+      alert("Не удалось выполнить выход. Попробуйте еще раз.");
+    }
   };
 
-  // Загружаем данные пользователя при монтировании компонента
+  // Загружаем данные пользователя из локального хранилища или с сервера при монтировании компонента
   useEffect(() => {
-    const fetchUserData = async () => {
-      const accessToken = Cookies.get("access");
-
-      if (!accessToken) {
-        alert("Токен не найден. Пожалуйста, авторизуйтесь.");
-        logout();
-        updateUser(null);
-        return;
-      }
-
-      try {
-        const response = await axios.get(
-          "https://personal-account-fastapi.onrender.com/user_data/get/personal",
-          {
-            withCredentials: true,
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+    const storedProfileData = localStorage.getItem("profileData");
+    if (storedProfileData) {
+      setProfileData(JSON.parse(storedProfileData)); // Загружаем данные из localStorage
+    } else {
+      const fetchUserData = async () => {
+        try {
+          const accessToken = Cookies.get("access");
+          if (!accessToken) {
+            alert("Токен не найден. Пожалуйста, авторизуйтесь.");
+            return;
           }
-        );
-        setProfileData(response.data); // Устанавливаем данные в состояние
-        updateUser(response.data); // Обновляем контекст пользователя
-      } catch (error) {
-        console.error("Ошибка при загрузке данных пользователя:", error);
-        if (error.response && error.response.status === 401) {
-          alert("Ошибка авторизации. Перенаправляем на страницу входа.");
-          logout();
-          updateUser(null);
+
+          const response = await axios.get(
+            "https://personal-account-fastapi.onrender.com/user_data/get/personal",
+            {
+              withCredentials: true,
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+          console.log("Данные от сервера:", response.data);
+          setProfileData(response.data); // Устанавливаем полученные данные в состояние
+        } catch (error) {
+          console.error("Ошибка при загрузке данных:", error);
+          if (error.response && error.response.status === 401) {
+            alert("Ошибка авторизации. Пожалуйста, войдите в систему.");
+          } else {
+            alert("Не удалось загрузить данные пользователя.");
+          }
         }
-      }
-    };
+      };
 
-    fetchUserData();
-  }, [logout, updateUser]);
+      fetchUserData();
+    }
+  }, []); // Этот useEffect выполняется только один раз при монтировании
 
-  // Сохраняем данные профиля в localStorage при их изменении
+  // Сохраняем данные в localStorage при изменении
   useEffect(() => {
     if (profileData) {
       localStorage.setItem("profileData", JSON.stringify(profileData));
     }
-  }, [profileData]);
+  }, [profileData]); // Каждый раз при изменении данных сохраняем их в localStorage
 
   const toggleFormVisibility = () => {
     setIsFormVisible(true);
@@ -87,6 +97,7 @@ const Profile = () => {
     setIsClassifierVisible(false);
   };
 
+  // Функция для отправки PUT-запроса на сервер для обновления данных
   const updateUserData = async (updatedData) => {
     const dataToSend = {
       phone_number: updatedData.phone_number || "",
@@ -102,19 +113,22 @@ const Profile = () => {
         dataToSend,
         { withCredentials: true }
       );
-      setProfileData(response.data); // Обновляем данные в состоянии
-      localStorage.setItem("profileData", JSON.stringify(response.data));
+
+      // Обновляем данные в состоянии после успешного ответа от сервера
+      setProfileData(response.data);
+      localStorage.setItem("profileData", JSON.stringify(response.data)); // Сохраняем в localStorage
       alert("Данные успешно обновлены");
-      setIsEditing(false);
+      setIsEditing(false); // Закрываем режим редактирования
     } catch (error) {
       console.error("Ошибка при обновлении данных:", error.response?.data || error);
-      alert("Не удалось обновить данные.");
+      alert("Не удалось обновить данные");
     }
   };
 
+  // Сохраняем изменения в профиле
   const saveChanges = async () => {
     try {
-      await updateUserData(profileData);
+      await updateUserData(profileData); // Отправляем данные на сервер
       alert("Профиль успешно обновлен!");
     } catch (error) {
       console.error("Ошибка сохранения данных:", error);
@@ -139,7 +153,7 @@ const Profile = () => {
       </header>
 
       <div className="flex flex-grow mt-16">
-        {/* Sidebar */}
+        {/* Sidebar Navigation */}
         <div className="w-64 h-screen fixed left-0 top-0 bg-gradient-to-br from-blue-600 to-purple-700 text-white shadow-lg flex flex-col pt-16">
           <div className="flex items-center px-6 py-4 border-b border-purple-700">
             <FaUserCircle className="text-3xl text-white mr-3" />
@@ -186,7 +200,7 @@ const Profile = () => {
               <li className="mb-2">
                 <button
                   onClick={handleLogout}
-                  className="w-full px-6 py-3 text-left text-white bg-red-500 hover:bg-red-700 rounded focus:outline-none"
+                  className="text-red-500 hover:text-red-700"
                 >
                   Выход
                 </button>
@@ -219,11 +233,14 @@ const Profile = () => {
                     id="phone_number"
                     name="phone_number"
                     value={profileData.phone_number || ""}
-                    disabled={!isEditing}
+                    disabled={!isEditing} // Только если редактирование включено
                     onChange={(e) =>
-                      setProfileData({ ...profileData, phone_number: e.target.value })
+                      setProfileData({
+                        ...profileData,
+                        phone_number: e.target.value,
+                      })
                     }
-                    className="w-full p-2 text-black rounded"
+                    className="w-full p-2 rounded-md bg-gray-100 text-black"
                   />
                   <label htmlFor="first_name" className="block text-white">
                     Имя:
@@ -233,11 +250,14 @@ const Profile = () => {
                     id="first_name"
                     name="first_name"
                     value={profileData.first_name || ""}
-                    disabled={!isEditing}
+                    disabled={!isEditing} // Только если редактирование включено
                     onChange={(e) =>
-                      setProfileData({ ...profileData, first_name: e.target.value })
+                      setProfileData({
+                        ...profileData,
+                        first_name: e.target.value,
+                      })
                     }
-                    className="w-full p-2 text-black rounded"
+                    className="w-full p-2 rounded-md bg-gray-100 text-black"
                   />
                   <label htmlFor="last_name" className="block text-white">
                     Фамилия:
@@ -247,11 +267,14 @@ const Profile = () => {
                     id="last_name"
                     name="last_name"
                     value={profileData.last_name || ""}
-                    disabled={!isEditing}
+                    disabled={!isEditing} // Только если редактирование включено
                     onChange={(e) =>
-                      setProfileData({ ...profileData, last_name: e.target.value })
+                      setProfileData({
+                        ...profileData,
+                        last_name: e.target.value,
+                      })
                     }
-                    className="w-full p-2 text-black rounded"
+                    className="w-full p-2 rounded-md bg-gray-100 text-black"
                   />
                   <label htmlFor="dad_name" className="block text-white">
                     Отчество:
@@ -261,43 +284,47 @@ const Profile = () => {
                     id="dad_name"
                     name="dad_name"
                     value={profileData.dad_name || ""}
-                    disabled={!isEditing}
+                    disabled={!isEditing} // Только если редактирование включено
                     onChange={(e) =>
-                      setProfileData({ ...profileData, dad_name: e.target.value })
+                      setProfileData({
+                        ...profileData,
+                        dad_name: e.target.value,
+                      })
                     }
-                    className="w-full p-2 text-black rounded"
+                    className="w-full p-2 rounded-md bg-gray-100 text-black"
                   />
                   <label htmlFor="bio" className="block text-white">
-                    Биография:
+                    О себе:
                   </label>
                   <textarea
                     id="bio"
                     name="bio"
+                    rows="4"
                     value={profileData.bio || ""}
-                    disabled={!isEditing}
+                    disabled={!isEditing} // Только если редактирование включено
                     onChange={(e) =>
                       setProfileData({ ...profileData, bio: e.target.value })
                     }
-                    className="w-full p-2 text-black rounded"
+                    className="w-full p-2 rounded-md bg-gray-100 text-black resize-none"
                   ></textarea>
-                  <div className="flex space-x-4">
+
+                  {isEditing ? (
                     <button
                       type="button"
-                      onClick={() => setIsEditing(!isEditing)}
-                      className="px-4 py-2 bg-yellow-500 text-white rounded"
+                      onClick={saveChanges}
+                      className="block w-full py-3 mt-6 text-white bg-purple-500 rounded-md hover:bg-green-600"
                     >
-                      {isEditing ? "Отменить" : "Редактировать"}
+                      Сохранить изменения
                     </button>
-                    {isEditing && (
-                      <button
-                        type="button"
-                        onClick={saveChanges}
-                        className="px-4 py-2 bg-green-500 text-white rounded"
-                      >
-                        Сохранить
-                      </button>
-                    )}
-                  </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(true)} // Переключаем режим редактирования
+                      className="block w-full py-3 mt-6 text-white bg-blue-500 rounded-md hover:bg-blue-600"
+                    >
+                      Изменить данные
+                    </button>
+                  )}
                 </form>
               </>
             ) : isFormVisible ? (
@@ -313,4 +340,3 @@ const Profile = () => {
 };
 
 export default Profile;
-  
