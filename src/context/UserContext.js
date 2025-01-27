@@ -54,7 +54,7 @@ const handleVkLogin = async () => {
   const response = await fetch('https://registration-fastapi.onrender.com/vk/login', {
     method: 'GET',
   });
-
+ 
   if (!response.ok) {
     throw new Error('VK login failed');
   }
@@ -121,10 +121,10 @@ export const UserProvider = ({ children }) => {
     const headers = {};
 
     if (accessToken) {
-      headers['access'] = `access=${accessToken}`;
+      headers['Set-Cookie'] = `access=${accessToken}`;
     }
     if (refreshToken) {
-      headers['refresh'] = `refresh=${refreshToken}`;
+      headers['Set-Cookie'] = `refresh=${refreshToken}`;
     }
   
     if (accessToken || refreshToken) {
