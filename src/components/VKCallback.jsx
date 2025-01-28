@@ -13,38 +13,62 @@ const VKCallback = () => {
       const fullCode = urlParams.get("code"); // Получаем полный код из URL
 
       if (fullCode) {
-        const code = fullCode.split("&")[0]; // Обрезаем до `&state`
+        const code = fullCode.split("&")[0]; // Обрезаем до &state
+        const deviceId = urlParams.get("device_id"); // Получаем device_id из URL
 
         try {
-          // Пробуем выполнить вход через API
-          const loginResponse = await axios.get(
-            `https://registration-fastapi.onrender.com/vk/login?code=${code}`,
-            { withCredentials: true }
+          // Получаем токены от ВКонтакте
+          const tokenResponse = await axios.get(
+            `https://registration-fastapi.onrender.com/vk/get/token?code=${code}&device_id=${deviceId}`
           );
 
-          if (loginResponse.status === 200) {
-            console.log("Успешный вход:", loginResponse.data);
+          if (tokenResponse.status === 200) {
+            const { access_token, refresh_token } = tokenResponse.data;
 
-            const userData = loginResponse.data;
-            updateUser(userData);
+            // Пробуем выполнить вход через API
+            const loginResponse = await axios.get(
+              `https://registration-fastapi.onrender.com/vk/login?access_token=${access_token}`,
+              { withCredentials: true }
+            );
 
-            navigate("/profile"); // Перенаправляем на страницу приветствия
+            if (loginResponse.status === 200) {
+              // Если вход успешный, обновляем пользователя
+              console.log("Успешный вход:", loginResponse.data);
+              const userData = loginResponse.data;
+              updateUser(userData);
+              navigate("/profile");
+            } else {
+              throw new Error("Пользователь не найден, пробуем регистрацию");
+            }
           } else {
-            throw new Error("Пользователь не найден");
+            throw new Error("Ошибка получения токенов от ВКонтакте");
           }
         } catch (error) {
-          console.error("Ошибка авторизации:", error);
+          console.error("Ошибка авторизации или регистрации:", error);
 
           try {
-            // Выполняем регистрацию, если вход не удался
+            // Если вход не удался, пробуем регистрацию
             const registrationResponse = await axios.get(
-              `https://registration-fastapi.onrender.com/vk/registration?code=${code}`,
+              `https://registration-fastapi.onrender.com/vk/registration?access_token=${tokenResponse.data.access_token}`,
               { withCredentials: true }
             );
 
             if (registrationResponse.status === 200) {
               console.log("Пользователь зарегистрирован:", registrationResponse.data);
-              navigate("/profile");
+              // Получаем refresh и access токены для последующего использования
+              const { access, refresh } = registrationResponse.data;
+
+              // Отправляем токены на другой эндпоинт
+              const tokenResponse = await axios.get(
+                `https://personal-account-fastapi.onrender.com/get_toket/?access=${access}&refresh=${refresh}`
+              );
+
+              if (tokenResponse.status === 200) {
+                console.log("Токены успешно переданы.");
+                navigate("/profile");
+              } else {
+                console.error("Ошибка передачи токенов.");
+              }
             }
           } catch (registrationError) {
             console.error("Ошибка регистрации:", registrationError);
