@@ -10,10 +10,7 @@ const Register = () => {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    const setTokenInCookies = (accessToken, refreshToken) => {
-        document.cookie = `access_token=${accessToken}; path=/; Secure; HttpOnly`;
-        document.cookie = `refresh_token=${refreshToken}; path=/; Secure; HttpOnly`;
-    };
+    
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -40,10 +37,10 @@ const Register = () => {
 
             if (response.ok) {
                 const { access_token, refresh_token } = await response.json();
-                setTokenInCookies(access_token, refresh_token);
+                
                 // Валидация токенов
                 
-                
+
                 toast.success('Регистрация успешна!');
                 setTimeout(() => navigate('/login'), 1500);
             } else {

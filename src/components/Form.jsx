@@ -22,12 +22,7 @@ const Form = () => {
   const [recommendations, setRecommendations] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const setTokenInCookies = (accessToken, refreshToken) => {
-    document.cookie = `access=${accessToken}; path=/; SameSite=None; Secure`; // Для кросс-доменных запросов
-    document.cookie = `refresh=${refreshToken}; path=/; SameSite=None; Secure`; // Для кросс-доменных запросов
-    console.log('Тут добавились куки из авторизации', document.cookie);
-  
-  };
+ 
 
 // useEffect(() => {
 //   // Функция для вывода токенов в консоль
@@ -78,7 +73,7 @@ const Form = () => {
     const AccessToket=getTokenFromCookies('access')
 
     const RefreshToken=getTokenFromCookies('refresh')
-    setTokenInCookies(AccessToket, RefreshToken);
+    
     try {
       const response = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
         method: 'POST',

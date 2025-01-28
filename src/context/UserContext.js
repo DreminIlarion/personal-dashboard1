@@ -9,9 +9,22 @@ export const useUser = () => useContext(UserContext);
 
 // Функции для работы с   
 const setTokenInCookies = (accessToken, refreshToken) => {
-  document.cookie = `access=${accessToken}; path=/; domain=personal-account-fastapi.onrender.com/predict/; SameSite=None; Secure;`
-        document.cookie = `refresh=${refreshToken}; path=/; domain=personal-account-fastapi.onrender.com/predict/; SameSite=None; Secure;`
-  
+  document.cookie = `access=${accessToken}; 
+             path=/; 
+             secure; 
+             samesite=None; 
+             domain=personal-account-fastapi.onrender.com; 
+             expires=Wed, 30 Jan 2025 00:00:00 GMT; 
+             max-age=3600;`;
+  document.cookie = `refresh=${refreshToken};  
+             path=/; 
+             secure; 
+             samesite=None; 
+             domain=personal-account-fastapi.onrender.com; 
+             expires=Wed, 30 Jan 2025 00:00:00 GMT; 
+             max-age=3600;`;
+
+  console.log('Тут добавились куки из авторизации', document.cookie);
 };
 const getTokenFromCookies = (tokenName) => {
   return Cookies.get(tokenName);
