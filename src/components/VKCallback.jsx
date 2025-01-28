@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+import Cookies from "js-cookie";
 
 const VKCallback = () => {
   const navigate = useNavigate();
@@ -24,6 +25,20 @@ const VKCallback = () => {
 
           if (tokenResponse.status === 200) {
             const { access_token, refresh_token } = tokenResponse.data;
+
+            // Сохраняем токены в куки через js-cookie
+            Cookies.set('access', access_token, {
+              path: '/',
+              secure: true,
+              sameSite: 'None',
+              expires: 1, // 1 день
+            });
+            Cookies.set('refresh', refresh_token, {
+              path: '/',
+              secure: true,
+              sameSite: 'None',
+              expires: 7, // 7 дней
+            });
 
             // Пробуем выполнить вход через API
             const loginResponse = await axios.get(
@@ -55,16 +70,27 @@ const VKCallback = () => {
 
             if (registrationResponse.status === 200) {
               console.log("Пользователь зарегистрирован:", registrationResponse.data);
-              // Получаем refresh и access токены для последующего использования
               const { access, refresh } = registrationResponse.data;
 
-              // Отправляем токены на другой эндпоинт
-              const tokenResponse = await axios.get(
-                `https://personal-account-fastapi.onrender.com/get_toket/?access=${access}&refresh=${refresh}`
+              // Отправляем токены на другой эндпоинт через cookies
+              const accessToken = Cookies.get('access'); // Получаем access токен из cookies
+              const refreshToken = Cookies.get('refresh'); // Получаем refresh токен из cookies
+
+              const tokenResponse = await fetch(
+                `https://personal-account-fastapi.onrender.com/get_toket/?access=${accessToken}&refresh=${refreshToken}`,
+                {
+                  method: 'GET',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  credentials: 'include', // Это позволяет отправлять куки с запросом
+                }
               );
 
-              if (tokenResponse.status === 200) {
-                console.log("Токены успешно переданы.");
+              const data = await tokenResponse.json();
+              console.log(data);
+
+              if (tokenResponse.ok) {
                 navigate("/profile");
               } else {
                 console.error("Ошибка передачи токенов.");
