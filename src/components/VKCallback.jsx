@@ -26,20 +26,6 @@ const VKCallback = () => {
           if (tokenResponse.status === 200) {
             const { access_token, refresh_token } = tokenResponse.data;
 
-            // Сохраняем токены в куки через js-cookie
-            Cookies.set('access', access_token, {
-              path: '/',
-              secure: true,
-              sameSite: 'None',
-              expires: 1, // 1 день
-            });
-            Cookies.set('refresh', refresh_token, {
-              path: '/',
-              secure: true,
-              sameSite: 'None',
-              expires: 7, // 7 дней
-            });
-
             // Пробуем выполнить вход через API
             const loginResponse = await axios.get(
               `https://registration-fastapi.onrender.com/vk/login?access_token=${access_token}`,
@@ -72,12 +58,26 @@ const VKCallback = () => {
               console.log("Пользователь зарегистрирован:", registrationResponse.data);
               const { access, refresh } = registrationResponse.data;
 
+              // Сохраняем токены в куки через js-cookie
+              Cookies.set('access', access, {
+                path: '/',
+                secure: true,
+                sameSite: 'None',
+                expires: 1, // 1 день
+              });
+              Cookies.set('refresh', refresh, {
+                path: '/',
+                secure: true,
+                sameSite: 'None',
+                expires: 7, // 7 дней
+              });
+
               // Отправляем токены на другой эндпоинт через cookies
               const accessToken = Cookies.get('access'); // Получаем access токен из cookies
               const refreshToken = Cookies.get('refresh'); // Получаем refresh токен из cookies
 
               const tokenResponse = await fetch(
-                `https://personal-account-fastapi.onrender.com/get_toket/?access=${accessToken}&refresh=${refreshToken}`,
+                `https://personal-account-fastapi.onrender.com/get_toket/`,
                 {
                   method: 'GET',
                   headers: {
