@@ -83,22 +83,24 @@ const Form = () => {
         {
           headers: {
             'Content-Type': 'application/json',
-            
+            'access':  `access=${AccessToket}; refreshToken=${RefreshToken}`,
+            'refresh':`refresh=${RefreshToken}`,
           },
           withCredentials: true, // Это позволяет отправлять куки с запросом
         }
       );
-  
-      console.log('Ответ с сервера:', response.data);
+      console.log('тут затык');
+      console.log('Ответ с сервера:fsddddddddddddddddddddd', response.data);
       console.log('Отправленные куки:', document.cookie);
       if (response.data.status === 'ok') {
+        console.log('тут затык');
         setRecommendations(response.data.data);
         setIsModalOpen(true);
       } else {
         setResponseMessage('Ошибка при обработке данных.');
       }
     } catch (error) {
-      console.error('Ошибка отправки данных:', error);
+      console.error('Ошибка отправки данных: тут ', error,'тут');
       console.log('Отправленные квфыыыыыыыыыыыыыыыыыыыуки:');
       setResponseMessage('Произошла ошибка при отправке данных.');
     }
