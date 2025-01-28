@@ -1,6 +1,7 @@
-import React, { useState ,useEffect} from 'react';
-import Cookies from 'js-cookie'; // Для работы с куками
+import React, { useState, useEffect } from 'react';
+import Cookies from 'js-cookie'; 
 import axios from 'axios';
+
 const Form = () => {
   const [formData, setFormData] = useState({
     top_n: '',
@@ -20,83 +21,73 @@ const Form = () => {
 
   const [responseMessage, setResponseMessage] = useState('');
   const [recommendations, setRecommendations] = useState([]);
+  const [classifierResults, setClassifierResults] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
- 
-
-// useEffect(() => {
-//   // Функция для вывода токенов в консоль
-//   const logTokens = () => {
-//     const access = Cookies.get('access');
-//     const refresh = Cookies.get('refresh');
-    
-//     // console.log('вот первый токен', access || 'Нет токена');
-//     // console.log('вот второй:', refresh || 'Нет токена');
-//   };
-
-//   // Логируем токены сразу при загрузке компонента
-//   logTokens();
-
-//   // Устанавливаем интервал для логирования токенов каждые 15 секунд
-//   const intervalId = setInterval(() => {
-//     logTokens();
-//   }, 15000); // 15000 мс = 15 секунд
-
-//   // Очистить интервал при размонтировании компонента
-//   return () => clearInterval(intervalId);
-// }, []);
 
   // Хэндлер для изменений в форме
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
+    setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
   };
-  const getTokenFromCookies = (tokenName) => {
-    return Cookies.get(tokenName);
-  };
 
   const handleExamClick = (exam) => {
-    setFormData(prevFormData => {
-      const updatedExams = prevFormData.exams.includes(exam)
-        ? prevFormData.exams.filter(item => item !== exam)
-        : [...prevFormData.exams, exam];
-      return { ...prevFormData, exams: updatedExams };
+    setFormData((prevData) => {
+      const newExams = prevData.exams.includes(exam)
+        ? prevData.exams.filter((item) => item !== exam) // Удаляем экзамен из списка, если он уже выбран
+        : [...prevData.exams, exam]; // Добавляем экзамен в список, если его еще нет
+  
+      return {
+        ...prevData,
+        exams: newExams,
+      };
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const accessToken = getTokenFromCookies('access');  // Получение access токена из cookies
-  const refreshToken = getTokenFromCookies('refresh');  // Получение refresh токена из cookies
 
-  try {
-    const response = await fetch(
-      `https://personal-account-fastapi.onrender.com/get_token/?access=${accessToken}&refresh=${refreshToken}`,
-      {
-        method: 'GET',
+    try {
+      console.log('Делаем запрос с параметром credentials: "include"');
+      const response = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',  // Это позволяет отправлять куки с запросом
-      }
-    );
+        credentials: 'include', // Убедитесь, что куки передаются
+        body: JSON.stringify({
+          ...formData,
+        }),
+      });
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Ответ с сервера:', data);
-      // Обработка ответа от сервера
-    } else {
-      console.log('Ошибка HTTP:', response.status);
+      console.log('Ответ от сервера:', response);
+      // Проверяем статус ответа
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Ответ с сервера (JSON):', data);
+        console.log('Ответ с сервера (JSON):', data.recomendate);
+
+        if (data.status === 'ok') {
+          setRecommendations(data.recomendate);
+          setClassifierResults(data.classifier);
+          setIsModalOpen(true);
+        } else {
+          
+          setRecommendations(data.recomendate);
+          setClassifierResults(data.classifier);
+          setIsModalOpen(true);
+        }
+      } else {
+        setResponseMessage('Ошибка при отправке данных.');
+      }
+    } catch (error) {
+      console.error('Ошибка отправки данных:', error);
+      setResponseMessage('Произошла ошибка при отправке данных.');
     }
-  } catch (error) {
-    console.error('Ошибка при отправке GET запроса:', error);
-  }
-    
   };
-  
+
   return (
     <div className="container mx-auto p-6">
       <form onSubmit={handleSubmit} className="bg-white p-8 shadow-xl rounded-lg w-full max-w-xl ml-7">
@@ -214,8 +205,6 @@ const Form = () => {
             </div>
           </label>
 
-          
-
           {/* Поле для выбора формы приема */}
           <label className="block text-sm font-semibold">
             Вид приема:
@@ -232,7 +221,7 @@ const Form = () => {
             </select>
           </label>
 
-              {/* Поле для приоритета */}
+          {/* Поле для приоритета */}
           <label className="block text-sm font-semibold">
             Приоритет:
             <input
@@ -244,7 +233,6 @@ const Form = () => {
               required
             />
           </label>
-
 
           {/* Поле для выбора вида образования */}
           <label className="block text-sm font-semibold">
@@ -291,11 +279,25 @@ const Form = () => {
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-1/2">
             <h2 className="text-2xl font-semibold mb-4">Рекомендации</h2>
-            <ul className="mb-4">
+
+            {/* Вывод рекомендаций */}
+            <div className="space-y-4 mb-6">
               {recommendations.map((item, index) => (
-                <li key={index} className="mb-2">{item}</li>
+                <div key={index} className="p-4 bg-blue-100 rounded-md shadow-md">
+                  <p className="text-lg font-semibold text-blue-700">{item}</p>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600">Вероятность: {Math.round(classifierResults[index] * 100)}%</p>
+                    <div className="w-full bg-gray-200 h-2 mt-1 rounded-full">
+                      <div
+                        style={{ width: `${Math.round(classifierResults[index] * 100)}%` }}
+                        className="h-2 bg-green-500 rounded-full"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
+
             <button
               onClick={() => setIsModalOpen(false)}
               className="w-full bg-purple-600 text-white p-3 rounded-lg"

@@ -16,6 +16,9 @@ const Login = () => {
   const { login } = useUser();  // Получаем метод login из контекста
 
 
+    const getTokenFromCookies = (tokenName) => {
+        return Cookies.get(tokenName);
+      };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -62,9 +65,30 @@ const Login = () => {
           sameSite: 'None',
           expires: 7, // 7 дней
         });
-  
-        console.log('Токены добавлены в куки:', Cookies.get());
-  
+        const accessToken = getTokenFromCookies('access');  // Получение access токена из cookies
+        const refreshToken = getTokenFromCookies('refresh');
+        try {
+            const response = await fetch(
+              `https://personal-account-fastapi.onrender.com/get_token/?access=${accessToken}&refresh=${refreshToken}`,
+              {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                credentials: 'include',  // Это позволяет отправлять куки с запросом
+              }
+            );
+        
+            if (response.ok) {
+              const data = await response.json();
+              console.log('Ответ с сервера:', data);
+              // Обработка ответа от сервера
+            } else {
+              console.log('Ошибка HTTP:', response.status);
+            }
+          } catch (error) {
+            console.error('Ошибка при отправке GET запроса:', error);
+          }
         // Авторизуем пользователя через UserContext
         const userData = { email: email, hash_password: password }; // Пример данных пользователя
         login(userData, access, refresh); // Используем метод login из контекста
