@@ -76,13 +76,6 @@ const Form = () => {
     console.log('Отправка формы с данными:', JSON.stringify(formData));
     const accessToken = getTokenFromCookies('access');
     const refreshToken = getTokenFromCookies('refresh');
-    console.log(accessToken, refreshToken);
-    const headers = {
-                    
-      'Cookie': `access=${accessToken}`, 
-      'Cookie':`refresh=${refreshToken}`, // Добавляем access_token
-        // Добавляем refresh_token
-    };
 
     
 
@@ -91,8 +84,8 @@ const Form = () => {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Cookie': `access=${accessToken}`, 
-          'Cookie':`refresh=${refreshToken}`, 
+          Cookie: `access=${accessToken};refresh=${refreshToken}`, 
+          
         },
         body: JSON.stringify(formData),
         credentials: 'include',  // Это позволяет отправлять куки с запросом

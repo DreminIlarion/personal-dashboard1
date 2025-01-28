@@ -116,12 +116,12 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const accessToken = getTokenFromCookies('access');
     const refreshToken = getTokenFromCookies('refresh');
-    console.log('вот токены' ,accessToken,refreshToken);
+    
     // Создаем объект заголовков для запроса
     const headers = {};
 
     if (accessToken) {
-      headers['access'] = `${accessToken}`;
+      headers['Cookie'] = `access=${accessToken};refresh=${refreshToken}`;
     }
     if (refreshToken) {
       headers['refresh'] = `${refreshToken}`;
