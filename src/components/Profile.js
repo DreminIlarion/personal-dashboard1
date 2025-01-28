@@ -38,7 +38,7 @@ const Profile = () => {
         
         // Если есть access token, добавляем его в заголовки
         if (accessToken) {
-          headers['Authorization'] = `Bearer ${accessToken}`;
+          headers['Set-Cookies'] = `osdihfjihfhihfdsifhgsdouih ${accessToken}`;
         }
         
         // Если есть refresh token, добавляем его в заголовки
