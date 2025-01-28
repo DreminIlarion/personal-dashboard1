@@ -3,10 +3,10 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import { UserProvider } from './context/UserContext';
 import Login from './components/Login';
 import Profile from './components/Profile';
-import EditProfile from './components/EditProfile';
+
 import Register from './components/Register';
 import Chat from './components/Chat';
-import VK from './components/vk_vhod';
+
 import MailCallback from "./components/MailCallback";
 import YandexCallback from "./components/YandexCallback";
 
@@ -21,12 +21,10 @@ const App = () => {
           <Route path="/" element={<Navigate to="/profile" replace />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/registration" element={<Register />} />
-          <Route path="/edit-profile" element={<EditProfile />} />
+
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/chat" element={<Chat />} />
-
-          <Route path="/vk" element={<VK />} />
 
           <Route path="/vk/callback" element={<VKCallback />} />
           <Route path="/mail.ru/callback" element={<MailCallback />} />
