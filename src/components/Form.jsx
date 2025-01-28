@@ -23,8 +23,9 @@ const Form = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const setTokenInCookies = (accessToken, refreshToken) => {
-    document.cookie = `access=${accessToken}; path=/; Domain=personal-account-fastapi.onrender.com; Expires=Wed`;
-    document.cookie = `refresh=${refreshToken}; path=/; Domain=personal-account-fastapi.onrender.com; Expires=Wed`;
+    Cookies.set('access', accessToken, { path: '/', secure: true, sameSite: 'None' });
+    Cookies.set('refresh', refreshToken, { path: '/', secure: true, sameSite: 'None' });
+    console.log('тут добавились куки из формы',document.cookie);
     
 };
 
@@ -74,17 +75,16 @@ const Form = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Отправка формы с данными:', JSON.stringify(formData));
-    const accessToken = getTokenFromCookies('access');
-    const refreshToken = getTokenFromCookies('refresh');
+    const AccessToket=getTokenFromCookies('access')
 
-    
-
+    const RefreshToken=getTokenFromCookies('refresh')
+    setTokenInCookies(AccessToket, RefreshToken);
     try {
       const response = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          Cookie: `access=${accessToken};refresh=${refreshToken}`, 
+          
           
         },
         body: JSON.stringify(formData),

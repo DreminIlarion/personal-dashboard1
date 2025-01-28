@@ -12,9 +12,9 @@ const Login = () => {
     const navigate = useNavigate();
 
     const setTokenInCookies = (accessToken, refreshToken) => {
-        document.cookie = `access=${accessToken}; path=/; Secure; SameSite=Strict`;
-        document.cookie = `refresh=${refreshToken}; path=/; Secure;  SameSite=Strict`;
-        
+        document.cookie = `access=${accessToken}; path=/; Domain=personal-account-fastapi.onrender.com; `;
+        document.cookie = `refresh=${refreshToken}; path=/; Domain=personal-account-fastapi.onrender.com; `;
+        console.log('тут добавились куки из авторизации',document.cookie);
     };
 
     const handleLogin = async (e) => {
