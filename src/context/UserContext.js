@@ -9,14 +9,14 @@ export const useUser = () => useContext(UserContext);
 
 // Функции для работы с   
 const setTokenInCookies = (accessToken, refreshToken) => {
-  document.cookie = `access=${accessToken}; path=/; Secure; SameSite=Strict`;
-  document.cookie = `refresh=${refreshToken}; path=/; Secure;  SameSite=Strict`;
+  document.cookie = `access=${accessToken}; path=/; Domain=personal-account-fastapi.onrender.com; `;
+  document.cookie = `refresh=${refreshToken}; path=/; Domain=personal-account-fastapi.onrender.com; `;
   
 };
 const getTokenFromCookies = (tokenName) => {
   return Cookies.get(tokenName);
 };
-   
+    
 // Функции для авторизации
 const handleEmailLogin = async (email, password) => {
   const response = await fetch('https://registration-fastapi.onrender.com/authorization/login/email', {
@@ -24,7 +24,7 @@ const handleEmailLogin = async (email, password) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-
+ 
   if (!response.ok) {
     throw new Error('Login failed');
   }
@@ -120,14 +120,15 @@ export const UserProvider = ({ children }) => {
     // Создаем объект заголовков для запроса
     const headers = {};
 
-    if (accessToken) {
-      headers['Cookie'] = `access=${accessToken};refresh=${refreshToken}`;
-    }
-    if (refreshToken) {
-      headers['refresh'] = `${refreshToken}`;
-    }
+    
+      headers['set-coie'] = `access=${accessToken}; refresh=${refreshToken}`;
+    
+    
+      headers['set-cooie'] = `access=${refreshToken}; refresh=${accessToken}`;
+    
    
     if (accessToken || refreshToken) {
+      console.log(document.cookie);
       // Здесь можно добавить логику получения данных пользователя с сервера по токену
       // Например, запрос к API для получения информации о пользователе
       fetch('https://personal-account-fastapi.onrender.com/user_data/get/personal', {

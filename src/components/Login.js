@@ -48,7 +48,7 @@ const Login = () => {
                 // Устанавливаем токены в заголовки для дальнейших запросов
                 const headers = {
                     
-                    'Cookie': `access=${access};refresh=${refresh}`,  // Добавляем access_token
+                    Cookie: `access=${access}; refresh=${refresh}`,  // Добавляем access_token
                       // Добавляем refresh_token
                 };
     
