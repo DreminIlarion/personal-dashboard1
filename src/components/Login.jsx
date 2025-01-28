@@ -17,66 +17,81 @@ const Login = () => {
 
 
 
-const handleLogin = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
-
-  const body = isPhoneLogin
-    ? { phone_number: phoneNumber, hash_password: password }
-    : { email: email, hash_password: password };
-
-  const loginEndpoint = isPhoneLogin
-    ? '/authorization/login/phone/number'
-    : '/authorization/login/email';
-
-  try {
-    // Запрос авторизации
-    const response = await axios.post(
-      `https://registration-fastapi.onrender.com${loginEndpoint}`,
-      body,
-      {
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-    console.log(response.data);
-    if (response.status === 200) {
-        
-      const { access, refresh } = response.data;
-
-      // Сохраняем токены в куки через js-cookie
-      Cookies.set('access', access, { path: '/', secure: true, sameSite: 'Strict', expires: 1 }); // 1 день
-      Cookies.set('refresh', refresh, { path: '/', secure: true, sameSite: 'Strict', expires: 7 }); // 7 дней
-
-      console.log('Токены добавлены в куки:', Cookies.get());
-
-      // Авторизуем пользователя через UserContext
-      const userData = { email: email, hash_password: password }; // Пример данных пользователя
-      login(userData, access, refresh); // Используем метод login из контекста
-
-      // Получение данных пользователя
-     
-
-      if (Cookies.get() != '') {
-        console.log('я тут')
-        
-        console.log(userData); // Обработка данных о пользователе
-
-        toast.success('Вход выполнен успешно!');
-        setTimeout(() => navigate('/profile'), 1500);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+  
+    const body = isPhoneLogin
+      ? { phone_number: phoneNumber, hash_password: password }
+      : { email: email, hash_password: password };
+  
+    const loginEndpoint = isPhoneLogin
+      ? '/authorization/login/phone/number'
+      : '/authorization/login/email';
+  
+    try {
+      // Запрос авторизации
+      const response = await fetch(
+        `https://registration-fastapi.onrender.com${loginEndpoint}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            
+          },
+          body: JSON.stringify(body),
+        }
+      );
+  
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data);
+  
+        const { access, refresh } = data;
+  
+        // Сохраняем токены в куки через js-cookie
+        Cookies.set('access', access, {
+          path: '/',
+          secure: true,
+          sameSite: 'None',
+          expires: 1, // 1 день
+        });
+        Cookies.set('refresh', refresh, {
+          path: '/',
+          secure: true,
+          sameSite: 'None',
+          expires: 7, // 7 дней
+        });
+  
+        console.log('Токены добавлены в куки:', Cookies.get());
+  
+        // Авторизуем пользователя через UserContext
+        const userData = { email: email, hash_password: password }; // Пример данных пользователя
+        login(userData, access, refresh); // Используем метод login из контекста
+  
+        if (Cookies.get()) {
+          console.log('Куки успешно добавлены.');
+          console.log(userData); // Обработка данных о пользователе
+  
+          toast.success('Вход выполнен успешно!');
+          setTimeout(() => navigate('/profile'), 1500);
+        } else {
+          toast.error('Ошибка при добавлении куки. Попробуйте снова.');
+        }
       } else {
-        toast.error('Ошибка при получении данных. Попробуйте снова.');
+        const errorData = await response.json();
+        toast.error(
+          errorData.message || 'Ошибка входа. Попробуйте снова.'
+        );
       }
-    } else {
-      toast.error('Ошибка входа. Попробуйте снова.');
+    } catch (error) {
+      console.error('Ошибка при авторизации:', error);
+      toast.error('Ошибка сети. Проверьте соединение.');
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error('Ошибка при авторизации:', error);
-    toast.error('Ошибка сети. Проверьте соединение.');
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+  };
+  
 
   const handleOAuthRedirect = async (provider) => {
     setIsLoading(true);

@@ -69,43 +69,34 @@ const Form = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Отправленные куки: oioooooooooooo', document.cookie);
-    
-    console.log('Отправка формы с данными:', JSON.stringify(formData));
-  
-    const AccessToket = getTokenFromCookies('access');
-    const RefreshToken = getTokenFromCookies('refresh');
-  
-    try {
-      const response = await axios.post(
-        'https://personal-account-fastapi.onrender.com/predict/', 
-        formData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'access':  `access=${AccessToket}; refreshToken=${RefreshToken}`,
-            'refresh':`refresh=${RefreshToken}`,
-          },
-          withCredentials: true, // Это позволяет отправлять куки с запросом
-        }
-      );
-      console.log('тут затык');
-      console.log('Ответ с сервера:fsddddddddddddddddddddd', response.data);
-      console.log('Отправленные куки:', document.cookie);
-      if (response.data.status === 'ok') {
-        console.log('тут затык');
-        setRecommendations(response.data.data);
-        setIsModalOpen(true);
-      } else {
-        setResponseMessage('Ошибка при обработке данных.');
-      }
-    } catch (error) {
-      console.error('Ошибка отправки данных: тут ', error,'тут');
-      console.log('Отправленные квфыыыыыыыыыыыыыыыыыыыуки:');
-      setResponseMessage('Произошла ошибка при отправке данных.');
-    }
-  };
+    const accessToken = getTokenFromCookies('access');  // Получение access токена из cookies
+  const refreshToken = getTokenFromCookies('refresh');  // Получение refresh токена из cookies
 
+  try {
+    const response = await fetch(
+      `https://personal-account-fastapi.onrender.com/get_token/?access=${accessToken}&refresh=${refreshToken}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',  // Это позволяет отправлять куки с запросом
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Ответ с сервера:', data);
+      // Обработка ответа от сервера
+    } else {
+      console.log('Ошибка HTTP:', response.status);
+    }
+  } catch (error) {
+    console.error('Ошибка при отправке GET запроса:', error);
+  }
+    
+  };
+  
   return (
     <div className="container mx-auto p-6">
       <form onSubmit={handleSubmit} className="bg-white p-8 shadow-xl rounded-lg w-full max-w-xl ml-7">
