@@ -53,7 +53,7 @@ const VKCallback = () => {
           try {
             // Если вход не удался, пробуем регистрацию
             const registrationResponse = await axios.get(
-              `https://registration-fastapi.onrender.com/vk/registration?access_token=${tokenResponse.data.access_token}`,
+              `https://registration-fastapi.onrender.com/vk/registration?access_token=${urlParams.get('access_token')}`,
               { withCredentials: true }
             );
 
