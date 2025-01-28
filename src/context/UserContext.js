@@ -9,8 +9,8 @@ export const useUser = () => useContext(UserContext);
 
 // Функции для работы с   
 const setTokenInCookies = (accessToken, refreshToken) => {
-  document.cookie = `access=${accessToken}; path=/; Domain=personal-account-fastapi.onrender.com; `;
-  document.cookie = `refresh=${refreshToken}; path=/; Domain=personal-account-fastapi.onrender.com; `;
+  document.cookie = `access=${accessToken}; path=/; domain=personal-account-fastapi.onrender.com/predict/; SameSite=None; Secure;`
+        document.cookie = `refresh=${refreshToken}; path=/; domain=personal-account-fastapi.onrender.com/predict/; SameSite=None; Secure;`
   
 };
 const getTokenFromCookies = (tokenName) => {
@@ -32,7 +32,7 @@ const handleEmailLogin = async (email, password) => {
   const data = await response.json();
   setTokenInCookies(data.access_token, data.refresh_token);
   return data;
-};
+}; 
 
 const handlePhoneLogin = async (phoneNumber, password) => {
   const response = await fetch('https://registration-fastapi.onrender.com/authorization/login/phone/number', {

@@ -12,8 +12,9 @@ const Login = () => {
     const navigate = useNavigate();
 
     const setTokenInCookies = (accessToken, refreshToken) => {
-        document.cookie = `access=${accessToken}; path=/; SameSite=None; Secure`; // Для кросс-доменных запросов
-        document.cookie = `refresh=${refreshToken}; path=/; SameSite=None; Secure`; // Для кросс-доменных запросов
+        document.cookie = `access=${accessToken}; path=/; domain=personal-account-fastapi.onrender.com/predict/; SameSite=None; Secure;`
+        document.cookie = `refresh=${refreshToken}; path=/; domain=personal-account-fastapi.onrender.com/predict/; SameSite=None; Secure;`
+
         console.log('Тут добавились куки из авторизации', document.cookie);
     };
 
