@@ -40,7 +40,7 @@ const handlePhoneLogin = async (phoneNumber, password) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phone_number: phoneNumber, password }),
   });
-
+ 
   if (!response.ok) {
     throw new Error('Login failed');
   }
@@ -121,10 +121,10 @@ export const UserProvider = ({ children }) => {
     const headers = {};
 
     if (accessToken) {
-      headers['Cookie'] = `access=${accessToken}`;
+      headers['access'] = `${accessToken}`;
     }
     if (refreshToken) {
-      headers['Cookie'] = `refresh=${refreshToken}`;
+      headers['refresh'] = `${refreshToken}`;
     }
    
     if (accessToken || refreshToken) {

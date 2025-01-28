@@ -23,32 +23,32 @@ const Form = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const setTokenInCookies = (accessToken, refreshToken) => {
-    document.cookie = `access=${accessToken}; path=/; Secure; SameSite=Strict`;
-    document.cookie = `refresh=${refreshToken}; path=/; Secure;  SameSite=Strict`;
+    document.cookie = `access=${accessToken}; path=/; Domain=personal-account-fastapi.onrender.com; Expires=Wed`;
+    document.cookie = `refresh=${refreshToken}; path=/; Domain=personal-account-fastapi.onrender.com; Expires=Wed`;
     
 };
 
-useEffect(() => {
-  // Функция для вывода токенов в консоль
-  const logTokens = () => {
-    const access = Cookies.get('access');
-    const refresh = Cookies.get('refresh');
+// useEffect(() => {
+//   // Функция для вывода токенов в консоль
+//   const logTokens = () => {
+//     const access = Cookies.get('access');
+//     const refresh = Cookies.get('refresh');
     
-    // console.log('вот первый токен', access || 'Нет токена');
-    // console.log('вот второй:', refresh || 'Нет токена');
-  };
+//     // console.log('вот первый токен', access || 'Нет токена');
+//     // console.log('вот второй:', refresh || 'Нет токена');
+//   };
 
-  // Логируем токены сразу при загрузке компонента
-  logTokens();
+//   // Логируем токены сразу при загрузке компонента
+//   logTokens();
 
-  // Устанавливаем интервал для логирования токенов каждые 15 секунд
-  const intervalId = setInterval(() => {
-    logTokens();
-  }, 15000); // 15000 мс = 15 секунд
+//   // Устанавливаем интервал для логирования токенов каждые 15 секунд
+//   const intervalId = setInterval(() => {
+//     logTokens();
+//   }, 15000); // 15000 мс = 15 секунд
 
-  // Очистить интервал при размонтировании компонента
-  return () => clearInterval(intervalId);
-}, []);
+//   // Очистить интервал при размонтировании компонента
+//   return () => clearInterval(intervalId);
+// }, []);
 
   // Хэндлер для изменений в форме
   const handleChange = (e) => {
@@ -76,10 +76,11 @@ useEffect(() => {
     console.log('Отправка формы с данными:', JSON.stringify(formData));
     const accessToken = getTokenFromCookies('access');
     const refreshToken = getTokenFromCookies('refresh');
-    
+    console.log(accessToken, refreshToken);
     const headers = {
                     
-      'Cookie': `access=${accessToken};refresh=${refreshToken}`,  // Добавляем access_token
+      'Cookie': `access=${accessToken}`, 
+      'Cookie':`refresh=${refreshToken}`, // Добавляем access_token
         // Добавляем refresh_token
     };
 
@@ -88,7 +89,11 @@ useEffect(() => {
     try {
       const response = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
         method: 'POST',
-        headers: headers,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cookie': `access=${accessToken}`, 
+          'Cookie':`refresh=${refreshToken}`, 
+        },
         body: JSON.stringify(formData),
         credentials: 'include',  // Это позволяет отправлять куки с запросом
       });
