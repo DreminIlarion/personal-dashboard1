@@ -96,13 +96,12 @@ const Profile = () => {
 
   const updateUserData = async (updatedData) => {
     const dataToSend = {
-      phone_number: updatedData.phone_number || "",
+      
       first_name: updatedData.first_name,
       last_name: updatedData.last_name,
       dad_name: updatedData.dad_name,
       bio: updatedData.bio,
-      birth_date: updatedData.birth_date || "", // Новое поле
-      address: updatedData.address || "", // Новое поле
+      
     };
 
     try {
@@ -217,22 +216,8 @@ const Profile = () => {
                   Мои данные
                 </h2>
                 <form className="space-y-4">
-                  <label htmlFor="phone_number" className="block text-white">
-                    Номер телефона:
-                  </label>
-                  <input
-                    type="text"
-                    id="phone_number"
-                    value={profileData.phone_number || ""}
-                    disabled={!isEditing}
-                    onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        phone_number: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 rounded-md bg-gray-100 text-black"
-                  />
+                  
+                   
 
                   <label htmlFor="first_name" className="block text-white">
                     Имя:
@@ -299,39 +284,7 @@ const Profile = () => {
                     className="w-full p-2 rounded-md bg-gray-100 text-black resize-none"
                   ></textarea>
 
-                  <label htmlFor="birth_date" className="block text-white">
-                    Дата рождения:
-                  </label>
-                  <input
-                    type="date"
-                    id="birth_date"
-                    value={profileData.birth_date || ""}
-                    disabled={!isEditing}
-                    onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        birth_date: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 rounded-md bg-gray-100 text-black"
-                  />
-
-                  <label htmlFor="address" className="block text-white">
-                    Адрес:
-                  </label>
-                  <input
-                    type="text"
-                    id="address"
-                    value={profileData.address || ""}
-                    disabled={!isEditing}
-                    onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        address: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 rounded-md bg-gray-100 text-black"
-                  />
+                  
 
                   {isEditing ? (
                     <button

@@ -1,6 +1,6 @@
 import React, { useState ,useEffect} from 'react';
 import Cookies from 'js-cookie'; // Для работы с куками
-
+import axios from 'axios';
 const Form = () => {
   const [formData, setFormData] = useState({
     top_n: '',
@@ -70,42 +70,36 @@ const Form = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Отправка формы с данными:', JSON.stringify(formData));
-    const AccessToket=getTokenFromCookies('access')
-
-    const RefreshToken=getTokenFromCookies('refresh')
-    
+  
+    const AccessToket = getTokenFromCookies('access');
+    const RefreshToken = getTokenFromCookies('refresh');
+  
     try {
-      const response = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-        credentials: 'include',  // Это позволяет отправлять куки с запросом
-      });
-      
-      console.log('Ответ сервера:', response);
-  
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Ответ с сервера:', data);
-  
-        if (data.status === 'ok') {
-          setRecommendations(data.data);
-          setIsModalOpen(true);
-        } else {
-          setResponseMessage('Ошибка при обработке данных.');
+      const response = await axios.post(
+        'https://personal-account-fastapi.onrender.com/predict/', 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            
+          },
+          withCredentials: true, // Это позволяет отправлять куки с запросом
         }
+      );
+  
+      console.log('Ответ с сервера:', response.data);
+  
+      if (response.data.status === 'ok') {
+        setRecommendations(response.data.data);
+        setIsModalOpen(true);
       } else {
-        console.log('Ошибка HTTP:', response.status);
-        setResponseMessage('Ошибка при отправке данных.');
+        setResponseMessage('Ошибка при обработке данных.');
       }
     } catch (error) {
       console.error('Ошибка отправки данных:', error);
       setResponseMessage('Произошла ошибка при отправке данных.');
     }
   };
-  
 
   return (
     <div className="container mx-auto p-6">
