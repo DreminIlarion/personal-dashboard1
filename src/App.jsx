@@ -26,6 +26,8 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/chat" element={<Chat />} />
 
+          <Route path="/vk" element={<VK />} />
+
           <Route path="/vk/callback" element={<VKCallback />} />
           <Route path="/mail.ru/callback" element={<MailCallback />} />
           <Route path="/yandex/callback" element={<YandexCallback />} />
