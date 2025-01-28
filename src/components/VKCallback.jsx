@@ -11,12 +11,15 @@ const VKCallback = () => {
   useEffect(() => {
     const handleVKCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const fullCode = urlParams.get("code"); // Получаем полный код из URL
+      
+      // Извлекаем необходимые параметры из URL
+      const code = urlParams.get("code");  // Код авторизации
+      const deviceId = urlParams.get("device_id");  // device_id
+      const state = urlParams.get("state");  // state
+      const extId = urlParams.get("ext_id");  // ext_id
+      const expiresIn = urlParams.get("expires_in");  // expires_in (если нужно для валидации)
 
-      if (fullCode) {
-        const code = fullCode.split("&")[0]; // Обрезаем до &state
-        const deviceId = urlParams.get("device_id"); // Получаем device_id из URL
-
+      if (code && deviceId) {
         try {
           // Получаем токены от ВКонтакте
           const tokenResponse = await axios.get(
@@ -101,7 +104,7 @@ const VKCallback = () => {
           }
         }
       } else {
-        console.error("Код авторизации не найден в URL.");
+        console.error("Код авторизации или device_id не найден в URL.");
       }
     };
 
