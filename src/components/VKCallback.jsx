@@ -47,23 +47,22 @@ const VKCallback = () => {
           console.error("Ошибка авторизации или регистрации:", error);
 
           try {
-            // Если вход не удался, пробуем регистрацию
+            // Получение токенов с другого сервера для регистрации
             const registrationResponse = await axios.get(
-              `https://registration-fastapi.onrender.com/vk/registration?access_token=${tokenResponse.data.access_token}`,
+              `https://registration-fastapi.onrender.com/vk/registration?access_token=${error.response?.data?.access_token}`,
               { withCredentials: true }
             );
 
             if (registrationResponse.status === 200) {
               console.log("Пользователь зарегистрирован:", registrationResponse.data);
-              // Получаем refresh и access токены для последующего использования
               const { access, refresh } = registrationResponse.data;
 
               // Отправляем токены на другой эндпоинт
-              const tokenResponse = await axios.get(
+              const tokenTransferResponse = await axios.get(
                 `https://personal-account-fastapi.onrender.com/get_toket/?access=${access}&refresh=${refresh}`
               );
 
-              if (tokenResponse.status === 200) {
+              if (tokenTransferResponse.status === 200) {
                 console.log("Токены успешно переданы.");
                 navigate("/profile");
               } else {

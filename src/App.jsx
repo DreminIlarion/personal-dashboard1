@@ -6,7 +6,11 @@ import Profile from './components/Profile';
 import EditProfile from './components/EditProfile';
 import Register from './components/Register';
 import Chat from './components/Chat';
+import VK from './components/vk_vhod';
+import MailCallback from "./components/MailCallback";
+import YandexCallback from "./components/YandexCallback";
 
+import VKCallback from "./components/VKCallback";
 
 const App = () => {
   return (
@@ -21,6 +25,12 @@ const App = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/chat" element={<Chat />} />
+
+          <Route path="/vk/callback" element={<VKCallback />} />
+          <Route path="/mail.ru/callback" element={<MailCallback />} />
+          <Route path="/yandex/callback" element={<YandexCallback />} />
+          
+
         </Routes>
       </Router>
     </UserProvider>
