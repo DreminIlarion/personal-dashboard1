@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
-import { FaVk, FaMailBulk, FaYandex } from 'react-icons/fa';
+import { FaVk, FaYandex } from 'react-icons/fa';
 import { useUser } from '../context/UserContext';  // Импортируем контекст
-import axios from 'axios';
+
 import Cookies from 'js-cookie';
 import { RiMailLine } from 'react-icons/ri'; // Иконка для Mail.ru
 const Login = () => {
@@ -142,26 +142,7 @@ const Login = () => {
   };
 
   
-  const handleSocialLogin = async (provider, code) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `https://registration-fastapi.onrender.com/${provider}/get/token?code=${code}`,
-        { method: 'GET' }
-      );
-
-      const { access, refresh } = await response.json();
-      
-
-      toast.success(`Вход через ${provider} выполнен успешно!`);
-      setTimeout(() => navigate('/profile'), 1500);
-    } catch (error) {
-      console.error('Ошибка при авторизации через соцсеть:', error);
-      toast.error('Ошибка при авторизации. Попробуйте снова.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-gradient-to-r from-blue-500 to-purple-600">

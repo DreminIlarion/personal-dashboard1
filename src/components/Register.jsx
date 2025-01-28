@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
-import { FaVk, FaMailBulk, FaYandex } from 'react-icons/fa';
+import { FaVk, FaYandex } from 'react-icons/fa';
 import { RiMailLine } from 'react-icons/ri'; // Иконка для Mail.ru
 
 const Register = () => {
@@ -37,7 +37,7 @@ const Register = () => {
             );
 
             if (response.ok) {
-                const { access_token, refresh_token } = await response.json();
+                
                 
                 // Валидация токенов
                 

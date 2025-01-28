@@ -18,7 +18,7 @@ const Form = () => {
   });
 
   const [recommendations, setRecommendations] = useState([]);
-  const [classifierResults, setClassifierResults] = useState([]);
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
