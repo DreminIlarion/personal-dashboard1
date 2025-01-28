@@ -23,7 +23,7 @@ const Profile = () => {
     // Логика для выхода из приложения
     logout(); // Убираем пользователя из состояния
     console.log("Выход выполнен успешно!");
-    console.log(document.cookie);
+    
   };
   
 

@@ -58,6 +58,9 @@ useEffect(() => {
       [name]: value,
     }));
   };
+  const getTokenFromCookies = (tokenName) => {
+    return Cookies.get(tokenName);
+  };
 
   const handleExamClick = (exam) => {
     setFormData(prevFormData => {
@@ -68,15 +71,18 @@ useEffect(() => {
     });
   };
 
-  const handleSubmit = async (e,accessToken, refreshToken) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Отправка формы с данными:', formData);
-    
+    console.log('Отправка формы с данными:', JSON.stringify(formData));
+    const accessToken = getTokenFromCookies('access');
+    const refreshToken = getTokenFromCookies('refresh');
+    console.log()
     console.log(document.cookie);
     try {
       const response = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
         method: 'POST',
         headers: {
+          'Cookie': `access=${accessToken}; refresh=${refreshToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
@@ -223,18 +229,7 @@ useEffect(() => {
             </div>
           </label>
 
-          {/* Поле для приоритета */}
-          <label className="block text-sm font-semibold">
-            Приоритет:
-            <input
-              type="number"
-              value={formData.priority}
-              name="priority"
-              onChange={handleChange}
-              className="w-full p-2 mt-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
-              required
-            />
-          </label>
+          
 
           {/* Поле для выбора формы приема */}
           <label className="block text-sm font-semibold">
@@ -251,6 +246,20 @@ useEffect(() => {
               <option value="По договору">По договору</option>
             </select>
           </label>
+
+              {/* Поле для приоритета */}
+          <label className="block text-sm font-semibold">
+            Приоритет:
+            <input
+              type="number"
+              value={formData.priority}
+              name="priority"
+              onChange={handleChange}
+              className="w-full p-2 mt-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+              required
+            />
+          </label>
+
 
           {/* Поле для выбора вида образования */}
           <label className="block text-sm font-semibold">

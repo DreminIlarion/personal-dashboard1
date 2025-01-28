@@ -14,7 +14,7 @@ const Login = () => {
     const setTokenInCookies = (accessToken, refreshToken) => {
         document.cookie = `access=${accessToken}; path=/; Secure; SameSite=Strict`;
         document.cookie = `refresh=${refreshToken}; path=/; Secure;  SameSite=Strict`;
-        console.log('Tokens set in cookies:', accessToken, refreshToken);
+        
     };
 
     const handleLogin = async (e) => {

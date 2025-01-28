@@ -11,12 +11,12 @@ export const useUser = () => useContext(UserContext);
 const setTokenInCookies = (accessToken, refreshToken) => {
   document.cookie = `access=${accessToken}; path=/; Secure; SameSite=Strict`;
   document.cookie = `refresh=${refreshToken}; path=/; Secure;  SameSite=Strict`;
-  console.log('тут последний лог по сохранению в куках', accessToken, refreshToken);
+  
 };
 const getTokenFromCookies = (tokenName) => {
   return Cookies.get(tokenName);
 };
-
+   
 // Функции для авторизации
 const handleEmailLogin = async (email, password) => {
   const response = await fetch('https://registration-fastapi.onrender.com/authorization/login/email', {
@@ -121,12 +121,12 @@ export const UserProvider = ({ children }) => {
     const headers = {};
 
     if (accessToken) {
-      headers['Set-Cookie'] = `access=${accessToken}`;
+      headers['Cookie'] = `access=${accessToken}`;
     }
     if (refreshToken) {
-      headers['Set-Cookie'] = `refresh=${refreshToken}`;
+      headers['Cookie'] = `refresh=${refreshToken}`;
     }
-  
+   
     if (accessToken || refreshToken) {
       // Здесь можно добавить логику получения данных пользователя с сервера по токену
       // Например, запрос к API для получения информации о пользователе
@@ -140,7 +140,7 @@ export const UserProvider = ({ children }) => {
         .catch(() => logout()); // Если токен невалидный или произошла ошибка, выходим
     }
   }, []);
-
+ 
   return (
     <UserContext.Provider value={{ user, login, logout, updateUser }}>
       {children}
