@@ -48,8 +48,8 @@ const Login = () => {
                 // Устанавливаем токены в заголовки для дальнейших запросов
                 const headers = {
                     
-                    'Authorization': `Bearer ${access}`,  // Добавляем access_token
-                    'refresh-token': `Bearer ${refresh}`,  // Добавляем refresh_token
+                    'Cookie': `access=${access};refresh=${refresh}`,  // Добавляем access_token
+                      // Добавляем refresh_token
                 };
     
                 // Например, если нужно отправить запрос с этими токенами

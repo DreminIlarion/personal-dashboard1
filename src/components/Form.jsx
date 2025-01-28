@@ -25,7 +25,7 @@ const Form = () => {
   const setTokenInCookies = (accessToken, refreshToken) => {
     document.cookie = `access=${accessToken}; path=/; Secure; SameSite=Strict`;
     document.cookie = `refresh=${refreshToken}; path=/; Secure;  SameSite=Strict`;
-    console.log('Tokens set in cookies:', accessToken, refreshToken);
+    
 };
 
 useEffect(() => {
@@ -34,8 +34,8 @@ useEffect(() => {
     const access = Cookies.get('access');
     const refresh = Cookies.get('refresh');
     
-    console.log('вот первый токен', access || 'Нет токена');
-    console.log('вот второй:', refresh || 'Нет токена');
+    // console.log('вот первый токен', access || 'Нет токена');
+    // console.log('вот второй:', refresh || 'Нет токена');
   };
 
   // Логируем токены сразу при загрузке компонента
@@ -76,15 +76,19 @@ useEffect(() => {
     console.log('Отправка формы с данными:', JSON.stringify(formData));
     const accessToken = getTokenFromCookies('access');
     const refreshToken = getTokenFromCookies('refresh');
-    console.log()
-    console.log(document.cookie);
+    
+    const headers = {
+                    
+      'Cookie': `access=${accessToken};refresh=${refreshToken}`,  // Добавляем access_token
+        // Добавляем refresh_token
+    };
+
+    
+
     try {
       const response = await fetch('https://personal-account-fastapi.onrender.com/predict/', {
         method: 'POST',
-        headers: {
-          'Cookie': `access=${accessToken}; refresh=${refreshToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify(formData),
         credentials: 'include',  // Это позволяет отправлять куки с запросом
       });
