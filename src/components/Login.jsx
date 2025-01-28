@@ -5,7 +5,7 @@ import { FaVk, FaMailBulk, FaYandex } from 'react-icons/fa';
 import { useUser } from '../context/UserContext';  // Импортируем контекст
 import axios from 'axios';
 import Cookies from 'js-cookie';
-
+import { RiMailLine } from 'react-icons/ri'; // Иконка для Mail.ru
 const Login = () => {
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -110,7 +110,7 @@ const Login = () => {
       }
     } catch (error) {
       console.error('Ошибка при авторизации:', error);
-      toast.error('Ошибка сети. Проверьте соединение.');
+      toast.error('Проверьте правильность ввода данных пользователя.');
     } finally {
       setIsLoading(false);
     }
@@ -141,6 +141,7 @@ const Login = () => {
     }
   };
 
+  
   const handleSocialLogin = async (provider, code) => {
     setIsLoading(true);
     try {
@@ -166,7 +167,7 @@ const Login = () => {
     <div className="min-h-screen flex justify-center items-center bg-gradient-to-r from-blue-500 to-purple-600">
       <Toaster position="top-right" />
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">Добро пожаловать</h2>
+        <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">Вход</h2>
         <form onSubmit={handleLogin}>
           <div className="flex justify-center mb-6">
             <button
@@ -184,7 +185,7 @@ const Login = () => {
               Вход через Телефон
             </button>
           </div>
-
+  
           {!isPhoneLogin ? (
             <div className="mb-6">
               <label htmlFor="email" className="block text-sm font-semibold mb-2 text-gray-700">
@@ -196,7 +197,7 @@ const Login = () => {
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
+                placeholder="Введите ваш email"
               />
             </div>
           ) : (
@@ -210,11 +211,11 @@ const Login = () => {
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                required
+                placeholder="+7 (XXX) XXX-XX-XX"
               />
             </div>
           )}
-
+  
           <div className="mb-8">
             <label htmlFor="password" className="block text-sm font-semibold mb-2 text-gray-700">
               Пароль
@@ -225,10 +226,10 @@ const Login = () => {
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
+              placeholder="Введите пароль"
             />
           </div>
-
+  
           <button
             type="submit"
             className={`w-full py-3 text-white font-bold rounded-lg transition ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
@@ -237,47 +238,54 @@ const Login = () => {
             {isLoading ? 'Загрузка...' : 'Войти'}
           </button>
         </form>
-
+  
         <div className="mt-6 text-center">
           <p className="text-sm font-medium mb-4 text-gray-700">Или войдите через:</p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4">
+            {/* VK button */}
             <button
-              type="button"
-              className="flex items-center justify-center p-3 border border-gray-300 rounded-lg"
               onClick={() => handleOAuthRedirect('vk')}
+              className="flex items-center justify-center py-4 w-full bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
             >
-              <FaVk className="text-blue-600 text-2xl" />
+              <FaVk size={24} className="mr-2" />
+              Войти через ВКонтакте
             </button>
+            
+            {/* Mail.ru button */}
             <button
-              type="button"
-              className="flex items-center justify-center p-3 border border-gray-300 rounded-lg"
               onClick={() => handleOAuthRedirect('mail')}
+              className="flex items-center justify-center py-4 w-full bg-blue-400 text-white font-semibold rounded-lg hover:bg-blue-500 transition"
             >
-              <FaMailBulk className="text-blue-600 text-2xl" />
+              <RiMailLine size={24} className="mr-2" />
+              Войти через Mail.ru
             </button>
+            
+            {/* Yandex button */}
             <button
-              type="button"
-              className="flex items-center justify-center p-3 border border-gray-300 rounded-lg"
               onClick={() => handleOAuthRedirect('yandex')}
+              className="flex items-center justify-center py-4 w-full bg-[#F50000] text-white font-semibold rounded-lg hover:bg-[#D40000] transition"
             >
-              <FaYandex className="text-blue-600 text-2xl" />
+              <FaYandex size={24} className="mr-2" />
+              Войти через Яндекс
             </button>
-            <p className="mt-6 text-center text-sm text-gray-700">
-                    Нет аккаунта?{' '}
-                    <span
-                        role="link"
-                        tabIndex={0}
-                        onClick={() => navigate('/registration')}
-                        className="cursor-pointer underline text-blue-600 font-semibold"
-                    >
-                        Зарегистрируйтесь
-                    </span>
-                </p>
           </div>
         </div>
+  
+        <p className="mt-6 text-center text-sm text-gray-700">
+          Нет аккаунта?{' '}
+          <span
+            role="link"
+            tabIndex={0}
+            onClick={() => navigate('/registration')}
+            className="cursor-pointer underline text-blue-600 font-semibold"
+          >
+            Зарегистрируйтесь
+          </span>
+        </p>
       </div>
     </div>
   );
+
 };
 
 export default Login;

@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import Cookies from "js-cookie";
 
 const VKCallback = () => {
   const navigate = useNavigate();
@@ -11,15 +10,12 @@ const VKCallback = () => {
   useEffect(() => {
     const handleVKCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      
-      // Извлекаем необходимые параметры из URL
-      const code = urlParams.get("code");  // Код авторизации
-      const deviceId = urlParams.get("device_id");  // device_id
-      const state = urlParams.get("state");  // state
-      const extId = urlParams.get("ext_id");  // ext_id
-      const expiresIn = urlParams.get("expires_in");  // expires_in (если нужно для валидации)
+      const fullCode = urlParams.get("code"); // Получаем полный код из URL
 
-      if (code && deviceId) {
+      if (fullCode) {
+        const code = fullCode.split("&")[0]; // Обрезаем до &state
+        const deviceId = urlParams.get("device_id"); // Получаем device_id из URL
+
         try {
           // Получаем токены от ВКонтакте
           const tokenResponse = await axios.get(
@@ -53,47 +49,22 @@ const VKCallback = () => {
           try {
             // Если вход не удался, пробуем регистрацию
             const registrationResponse = await axios.get(
-              `https://registration-fastapi.onrender.com/vk/registration?access_token=${urlParams.get('access_token')}`,
+              `https://registration-fastapi.onrender.com/vk/registration?access_token=${tokenResponse.data.access_token}`,
               { withCredentials: true }
             );
 
             if (registrationResponse.status === 200) {
               console.log("Пользователь зарегистрирован:", registrationResponse.data);
+              // Получаем refresh и access токены для последующего использования
               const { access, refresh } = registrationResponse.data;
 
-              // Сохраняем токены в куки через js-cookie
-              Cookies.set('access', access, {
-                path: '/',
-                secure: true,
-                sameSite: 'None',
-                expires: 1, // 1 день
-              });
-              Cookies.set('refresh', refresh, {
-                path: '/',
-                secure: true,
-                sameSite: 'None',
-                expires: 7, // 7 дней
-              });
-
-              // Отправляем токены на другой эндпоинт через cookies
-              const accessToken = Cookies.get('access'); // Получаем access токен из cookies
-              const refreshToken = Cookies.get('refresh'); // Получаем refresh токен из cookies
-
-              const tokenResponse = await fetch(
-                `https://personal-account-fastapi.onrender.com/get_toket/`,
-                {
-                  method: 'GET',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  credentials: 'include', // Это позволяет отправлять куки с запросом
-                }
+              // Отправляем токены на другой эндпоинт
+              const tokenResponse = await axios.get(
+                `https://personal-account-fastapi.onrender.com/get_toket/?access=${access}&refresh=${refresh}`
               );
 
-              const data = await tokenResponse.json();
-              console.log(data);
-
-              if (tokenResponse.ok) {
+              if (tokenResponse.status === 200) {
+                console.log("Токены успешно переданы.");
                 navigate("/profile");
               } else {
                 console.error("Ошибка передачи токенов.");
@@ -104,7 +75,7 @@ const VKCallback = () => {
           }
         }
       } else {
-        console.error("Код авторизации или device_id не найден в URL.");
+        console.error("Код авторизации не найден в URL.");
       }
     };
 

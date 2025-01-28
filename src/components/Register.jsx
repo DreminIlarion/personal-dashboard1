@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { FaVk, FaMailBulk, FaYandex } from 'react-icons/fa';
+import { RiMailLine } from 'react-icons/ri'; // Иконка для Mail.ru
 
 const Register = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -150,14 +151,16 @@ const Register = () => {
                         </button>
                         <button
                             onClick={() => handleOAuthRedirect('mail.ru')}
-                            className="flex items-center justify-center py-4 w-full bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition"
+                            className="flex items-center justify-center py-4 w-full bg-blue-400 text-white font-semibold rounded-lg hover:bg-blue-500 transition"
                         >
-                            <FaMailBulk size={24} className="mr-2" />
+                            <RiMailLine size={24} className="mr-2" />
+                            
+                            
                             Зарегистрироваться через Mail.ru
                         </button>
                         <button
                             onClick={() => handleOAuthRedirect('yandex')}
-                            className="flex items-center justify-center py-4 w-full bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition"
+                            className="flex items-center justify-center py-4 w-full bg-[#F50000] text-white font-semibold rounded-lg hover:bg-[#D40000] transition"
                         >
                             <FaYandex size={24} className="mr-2" />
                             Зарегистрироваться через Яндекс
