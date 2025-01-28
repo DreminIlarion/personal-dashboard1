@@ -23,11 +23,11 @@ const Form = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const setTokenInCookies = (accessToken, refreshToken) => {
-    Cookies.set('access', accessToken, { path: '/', secure: true, sameSite: 'None' });
-    Cookies.set('refresh', refreshToken, { path: '/', secure: true, sameSite: 'None' });
-    console.log('тут добавились куки из формы',document.cookie);
-    
-};
+    document.cookie = `access=${accessToken}; path=/; SameSite=None; Secure`; // Для кросс-доменных запросов
+    document.cookie = `refresh=${refreshToken}; path=/; SameSite=None; Secure`; // Для кросс-доменных запросов
+    console.log('Тут добавились куки из авторизации', document.cookie);
+  
+  };
 
 // useEffect(() => {
 //   // Функция для вывода токенов в консоль
@@ -84,8 +84,6 @@ const Form = () => {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          
-          
         },
         body: JSON.stringify(formData),
         credentials: 'include',  // Это позволяет отправлять куки с запросом

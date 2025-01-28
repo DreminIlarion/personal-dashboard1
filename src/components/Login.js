@@ -12,9 +12,9 @@ const Login = () => {
     const navigate = useNavigate();
 
     const setTokenInCookies = (accessToken, refreshToken) => {
-        document.cookie = `access=${accessToken}; path=/; Domain=personal-account-fastapi.onrender.com; `;
-        document.cookie = `refresh=${refreshToken}; path=/; Domain=personal-account-fastapi.onrender.com; `;
-        console.log('тут добавились куки из авторизации',document.cookie);
+        document.cookie = `access=${accessToken}; path=/; SameSite=None; Secure`; // Для кросс-доменных запросов
+        document.cookie = `refresh=${refreshToken}; path=/; SameSite=None; Secure`; // Для кросс-доменных запросов
+        console.log('Тут добавились куки из авторизации', document.cookie);
     };
 
     const handleLogin = async (e) => {
@@ -45,17 +45,11 @@ const Login = () => {
                 // Сохраняем токены в куки
                 setTokenInCookies(access, refresh);
     
-                // Устанавливаем токены в заголовки для дальнейших запросов
-                const headers = {
-                    
-                    Cookie: `access=${access}; refresh=${refresh}`,  // Добавляем access_token
-                      // Добавляем refresh_token
-                };
-    
+                
                 // Например, если нужно отправить запрос с этими токенами
                 const profileResponse = await fetch('https://personal-account-fastapi.onrender.com/user_data/get/personal', {
                     method: 'GET',
-                    headers: headers,
+                    
                     credentials: 'include', // Убедитесь, что куки отправляются
                 });
     
