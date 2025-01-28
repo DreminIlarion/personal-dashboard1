@@ -69,6 +69,8 @@ const Form = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Отправленные куки: oioooooooooooo', document.cookie);
+    
     console.log('Отправка формы с данными:', JSON.stringify(formData));
   
     const AccessToket = getTokenFromCookies('access');
@@ -88,7 +90,7 @@ const Form = () => {
       );
   
       console.log('Ответ с сервера:', response.data);
-  
+      console.log('Отправленные куки:', document.cookie);
       if (response.data.status === 'ok') {
         setRecommendations(response.data.data);
         setIsModalOpen(true);
@@ -97,6 +99,7 @@ const Form = () => {
       }
     } catch (error) {
       console.error('Ошибка отправки данных:', error);
+      console.log('Отправленные квфыыыыыыыыыыыыыыыыыыыуки:');
       setResponseMessage('Произошла ошибка при отправке данных.');
     }
   };

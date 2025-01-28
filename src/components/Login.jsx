@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { FaVk, FaMailBulk, FaYandex } from 'react-icons/fa';
 import { useUser } from '../context/UserContext';  // Импортируем контекст
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,72 +15,68 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useUser();  // Получаем метод login из контекста
 
-  const setTokenInCookies = (accessToken, refreshToken) => {
-    document.cookie = `access=${accessToken}; `;
-    document.cookie = `refresh=${refreshToken};`;
 
-    console.log('Тут добавились куки из авторизации', document.cookie);
-  };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    const body = isPhoneLogin
-      ? { phone_number: phoneNumber, hash_password: password }
-      : { email: email, hash_password: password };
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-    const loginEndpoint = isPhoneLogin
-      ? '/authorization/login/phone/number'
-      : '/authorization/login/email';
+  const body = isPhoneLogin
+    ? { phone_number: phoneNumber, hash_password: password }
+    : { email: email, hash_password: password };
 
-    try {
-      // Отправляем запрос на авторизацию
-      const response = await fetch(
-        `https://registration-fastapi.onrender.com${loginEndpoint}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        }
-      );
+  const loginEndpoint = isPhoneLogin
+    ? '/authorization/login/phone/number'
+    : '/authorization/login/email';
 
-      if (response.ok) {
-        const { access, refresh } = await response.json();
-
-        // Сохраняем токены в куки
-        setTokenInCookies(access, refresh);
-
-        // Авторизуем пользователя через UserContext
-        const userData = { email: email, phoneNumber: phoneNumber }; // Пример данных пользователя, замените на получаемые данные
-        login(userData, access, refresh);  // Используем метод login из контекста
-
-        // Получаем данные пользователя с помощью токенов
-        const profileResponse = await fetch('https://personal-account-fastapi.onrender.com/user_data/get/personal', {
-          method: 'GET',
-          credentials: 'include', // Убедитесь, что куки отправляются
-        });
-
-        if (profileResponse.ok) {
-          const userData = await profileResponse.json();
-          console.log(userData);  // Обработка данных о пользователе
-
-          toast.success('Вход выполнен успешно!');
-          setTimeout(() => navigate('/profile'), 1500);
-        } else {
-          const errorData = await profileResponse.json();
-          toast.error(`Ошибка при получении данных: ${errorData.message || 'Попробуйте снова'}`);
-        }
-      } else {
-        const errorData = await response.json();
-        toast.error(`Ошибка входа: ${errorData.message || 'Попробуйте снова'}`);
+  try {
+    // Запрос авторизации
+    const response = await axios.post(
+      `https://registration-fastapi.onrender.com${loginEndpoint}`,
+      body,
+      {
+        headers: { 'Content-Type': 'application/json' },
       }
-    } catch (error) {
-      console.error('Error during login:', error);
-      toast.error('Ошибка сети. Проверьте соединение.');
-    } finally {
-      setIsLoading(false);
+    );
+    console.log(response.data);
+    if (response.status === 200) {
+        
+      const { access, refresh } = response.data;
+
+      // Сохраняем токены в куки через js-cookie
+      Cookies.set('access', access, { path: '/', secure: true, sameSite: 'Strict', expires: 1 }); // 1 день
+      Cookies.set('refresh', refresh, { path: '/', secure: true, sameSite: 'Strict', expires: 7 }); // 7 дней
+
+      console.log('Токены добавлены в куки:', Cookies.get());
+
+      // Авторизуем пользователя через UserContext
+      const userData = { email: email, hash_password: password }; // Пример данных пользователя
+      login(userData, access, refresh); // Используем метод login из контекста
+
+      // Получение данных пользователя
+     
+
+      if (Cookies.get() != '') {
+        console.log('я тут')
+        
+        console.log(userData); // Обработка данных о пользователе
+
+        toast.success('Вход выполнен успешно!');
+        setTimeout(() => navigate('/profile'), 1500);
+      } else {
+        toast.error('Ошибка при получении данных. Попробуйте снова.');
+      }
+    } else {
+      toast.error('Ошибка входа. Попробуйте снова.');
     }
-  };
+  } catch (error) {
+    console.error('Ошибка при авторизации:', error);
+    toast.error('Ошибка сети. Проверьте соединение.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleOAuthRedirect = async (provider) => {
     setIsLoading(true);
@@ -113,7 +111,7 @@ const Login = () => {
       );
 
       const { access, refresh } = await response.json();
-      setTokenInCookies(access, refresh);
+      
 
       toast.success(`Вход через ${provider} выполнен успешно!`);
       setTimeout(() => navigate('/profile'), 1500);
