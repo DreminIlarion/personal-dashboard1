@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
 import Form from './Form';
 import ClassifierForm from './MiniClassifier';
-import Chat from './Chat';
+// import Chat from './Chat';
 import axios from 'axios';
 const Profile = () => {
   const { user, logout, updateUser } = useUser();
@@ -321,7 +321,7 @@ const Profile = () => {
             >
               ✕
             </button>
-            <Chat />
+            {/* <Chat /> */}
           </div>
         )}
       </div>

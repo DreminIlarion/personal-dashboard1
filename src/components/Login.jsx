@@ -234,7 +234,7 @@ const Login = () => {
             
             {/* Mail.ru button */}
             <button
-              onClick={() => handleOAuthRedirect('mail')}
+              onClick={() => handleOAuthRedirect('mail.ru')}
               className="flex items-center justify-center py-4 w-full bg-blue-400 text-white font-semibold rounded-lg hover:bg-blue-500 transition"
             >
               <RiMailLine size={24} className="mr-2" />
