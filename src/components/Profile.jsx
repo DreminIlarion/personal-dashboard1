@@ -5,7 +5,7 @@ import { FaUserCircle } from 'react-icons/fa';
 import Form from './Form';
 import ClassifierForm from './MiniClassifier';
 import Chat from './Chat';
-
+import toast, { Toaster } from 'react-hot-toast';
 const Profile = () => {
   const { user, logout, updateUser } = useUser();
   const [activeSection, setActiveSection] = useState(null); // Хранит активный раздел
@@ -82,15 +82,16 @@ const Profile = () => {
       });
 
       if (response.ok) {
-        alert(isFirstTime ? "Данные успешно сохранены!" : "Данные успешно обновлены!");
+        toast.success(isFirstTime ? "Данные успешно сохранены!" : "Данные успешно обновлены!");
+        
         if (isFirstTime) setIsFirstTime(false);
       } else {
         console.error("Ошибка при сохранении данных:", response.status);
-        alert("Произошла ошибка при сохранении данных. Попробуйте еще раз.");
+        toast.error('Ошибка! данные не сохранены');
       }
     } catch (error) {
       console.error("Ошибка при сохранении данных профиля:", error);
-      alert("Произошла ошибка при сохранении данных. Попробуйте еще раз.");
+      toast.error('Ошибка !.');
     }
   };
 
@@ -115,6 +116,8 @@ const Profile = () => {
   return (
     <div className="flex flex-col font-sans overflow-hidden">
       {/* Header */}
+
+      <Toaster position="top-right" />
       <header
         className="w-full bg-blue-800 text-white shadow-md fixed top-0 z-50"
         style={{
