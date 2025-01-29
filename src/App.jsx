@@ -5,7 +5,7 @@ import Login from './components/Login';
 import Profile from './components/Profile';
 
 import Register from './components/Register';
-// import Chat from './components/Chat';
+import Chat from './components/Chat';
 
 import MailCallback from "./components/MailCallback";
 import YandexCallback from "./components/YandexCallback";
@@ -24,7 +24,7 @@ const App = () => {
 
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          {/* <Route path="/chat" element={<Chat />} /> */}
+          <Route path="/chat" element={<Chat />} />
 
           <Route path="/vk/callback" element={<VKCallback />} />
           <Route path="/mail.ru/callback" element={<MailCallback />} />
