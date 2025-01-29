@@ -9,7 +9,6 @@ import Chat from './components/Chat';
 
 import MailCallback from "./components/MailCallback";
 import YandexCallback from "./components/YandexCallback";
-
 import VKCallback from "./components/VKCallback";
 
 const App = () => {

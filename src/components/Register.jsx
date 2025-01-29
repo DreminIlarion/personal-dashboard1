@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { FaVk, FaYandex } from 'react-icons/fa';
-import { RiMailLine } from 'react-icons/ri'; // Иконка для Mail.ru
+
 
 const Register = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -23,8 +23,7 @@ const Register = () => {
             hash_password: password 
         };
 
-        // Убираем пустые значения
-        Object.keys(body).forEach(key => body[key] === '' && delete body[key]);
+       
 
         try {
             const response = await fetch(
@@ -153,7 +152,7 @@ const Register = () => {
                             onClick={() => handleOAuthRedirect('mail.ru')}
                             className="flex items-center justify-center py-4 w-full bg-blue-400 text-white font-semibold rounded-lg hover:bg-blue-500 transition"
                         >
-                            <RiMailLine size={24} className="mr-2" />
+                           
                             
                             
                             Зарегистрироваться через Mail.ru
