@@ -192,7 +192,7 @@ const Login = () => {
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+7 (XXX) XXX-XX-XX"
+                placeholder="+79.."
               />
             </div>
           )}

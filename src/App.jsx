@@ -11,6 +11,7 @@ import MailCallback from "./components/MailCallback";
 import YandexCallback from "./components/YandexCallback";
 import VKCallback from "./components/VKCallback";
 
+import PrivacyPolicy from "./components/PrivacyPolicy";
 const App = () => {
   return (
     <UserProvider>
@@ -29,7 +30,7 @@ const App = () => {
           <Route path="/mail.ru/callback" element={<MailCallback />} />
           <Route path="/yandex/callback" element={<YandexCallback />} />
           
-
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       </Router>
     </UserProvider>

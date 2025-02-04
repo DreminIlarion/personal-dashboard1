@@ -59,7 +59,7 @@ const VKCallback = () => {
 
               // Отправляем токены на другой эндпоинт
               const tokenTransferResponse = await axios.get(
-                `https://personal-account-fastapi.onrender.com/get_toket/?access=${access}&refresh=${refresh}`
+                `https://personal-account-fastapi.onrender.com/get/token/?access=${access}&refresh=${refresh}`
               );
 
               if (tokenTransferResponse.status === 200) {

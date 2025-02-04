@@ -3,27 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { FaVk, FaYandex } from 'react-icons/fa';
 
-
 const Register = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isChecked, setIsChecked] = useState(false); // Состояние для чекбокса
     const navigate = useNavigate();
-
-    
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setIsLoading(true);
 
-        const body = { 
-            phone_number: phoneNumber, 
-            email: email, 
-            hash_password: password 
+        const body = {
+            phone_number: phoneNumber,
+            email: email,
+            hash_password: password
         };
-
-       
 
         try {
             const response = await fetch(
@@ -36,11 +32,6 @@ const Register = () => {
             );
 
             if (response.ok) {
-                
-                
-                // Валидация токенов
-                
-
                 toast.success('Регистрация успешна!');
                 setTimeout(() => navigate('/login'), 1500);
             } else {
@@ -48,16 +39,16 @@ const Register = () => {
                 toast.error(`Ошибка регистрации: ${errorData.message || 'Попробуйте снова'}`);
             }
         } catch (error) {
-            console.error('Error during registration:', error);
+            console.error('Ошибка регистрации:', error);
             toast.error('Ошибка сети. Проверьте соединение.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    
-
     const handleOAuthRedirect = async (provider) => {
+        if (!isChecked) return; // Блокируем OAuth-кнопки без согласия
+
         setIsLoading(true);
         try {
             const response = await fetch(
@@ -115,7 +106,7 @@ const Register = () => {
                         />
                     </div>
 
-                    <div className="mb-8">
+                    <div className="mb-6">
                         <label htmlFor="password" className="block text-sm font-semibold mb-2 text-gray-700">
                             Пароль
                         </label>
@@ -129,10 +120,33 @@ const Register = () => {
                         />
                     </div>
 
+                    {/* Чекбокс для согласия */}
+                    <div className="mb-6 flex items-center">
+                        <input
+                            id="agree"
+                            type="checkbox"
+                            className="mr-2"
+                            checked={isChecked}
+                            onChange={() => setIsChecked(!isChecked)}
+                        />
+                        <label htmlFor="agree" className="text-sm text-gray-700">
+                            Я соглашаюсь с{' '}
+                            <a
+                                href="/privacy-policy"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 underline"
+                            >
+                                обработкой персональных данных
+                            </a>
+                        </label>
+                    </div>
+
                     <button
                         type="submit"
-                        className={`w-full py-3 text-white font-bold rounded-lg transition ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
-                        disabled={isLoading}
+                        className={`w-full py-3 text-white font-bold rounded-lg transition 
+                            ${isLoading || !isChecked ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                        disabled={isLoading || !isChecked}
                     >
                         {isLoading ? 'Загрузка...' : 'Зарегистрироваться'}
                     </button>
@@ -143,26 +157,29 @@ const Register = () => {
                     <div className="grid grid-cols-1 gap-4">
                         <button
                             onClick={() => handleOAuthRedirect('vk')}
-                            className="flex items-center justify-center py-4 w-full bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+                            className={`flex items-center justify-center py-4 w-full text-white font-semibold rounded-lg transition
+                                ${!isChecked ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                            disabled={!isChecked}
                         >
                             <FaVk size={24} className="mr-2" />
-                            Зарегистрироваться через ВКонтакте
+                            ВКонтакте
                         </button>
                         <button
                             onClick={() => handleOAuthRedirect('mail.ru')}
-                            className="flex items-center justify-center py-4 w-full bg-blue-400 text-white font-semibold rounded-lg hover:bg-blue-500 transition"
+                            className={`flex items-center justify-center py-4 w-full text-white font-semibold rounded-lg transition
+                                ${!isChecked ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-400 hover:bg-blue-500'}`}
+                            disabled={!isChecked}
                         >
-                           
-                            
-                            
-                            Зарегистрироваться через Mail.ru
+                            Mail.ru
                         </button>
                         <button
                             onClick={() => handleOAuthRedirect('yandex')}
-                            className="flex items-center justify-center py-4 w-full bg-[#F50000] text-white font-semibold rounded-lg hover:bg-[#D40000] transition"
+                            className={`flex items-center justify-center py-4 w-full text-white font-semibold rounded-lg transition
+                                ${!isChecked ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#F50000] hover:bg-[#D40000]'}`}
+                            disabled={!isChecked}
                         >
                             <FaYandex size={24} className="mr-2" />
-                            Зарегистрироваться через Яндекс
+                            Яндекс
                         </button>
                     </div>
                 </div>

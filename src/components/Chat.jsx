@@ -1,61 +1,63 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  // Загружаем сообщения из sessionStorage при монтировании компонента
   useEffect(() => {
-    const savedMessages = JSON.parse(sessionStorage.getItem('chatMessages'));
+    const savedMessages = JSON.parse(localStorage.getItem('chatMessages'));
     if (savedMessages) {
       setMessages(savedMessages);
-    } else {
-      // Очистить сообщения при обновлении страницы
-      sessionStorage.removeItem('chatMessages');
     }
-
-    // Очистка истории сообщений при перезагрузке
-    return () => {
-      sessionStorage.removeItem('chatMessages');  // Убираем данные при уходе компонента
-    };
   }, []);
 
-  // Сохраняем сообщения в sessionStorage при изменении
   useEffect(() => {
     if (messages.length > 0) {
-      sessionStorage.setItem('chatMessages', JSON.stringify(messages));
+      localStorage.setItem('chatMessages', JSON.stringify(messages));
     }
   }, [messages]);
 
-  // Функция для отправки сообщения
+  // Скролл вниз при добавлении нового сообщения
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   const sendMessage = async () => {
-    if (inputMessage.trim() === '') return; // Игнорируем пустое сообщение
+    if (inputMessage.trim() === '') return;
 
     const newMessages = [...messages, { text: inputMessage, sender: 'user' }];
     setMessages(newMessages);
     setInputMessage('');
+    setIsTyping(true);
 
     try {
-      const encodedMessage = encodeURIComponent(inputMessage); // Кодируем сообщение для URL
-
-      // Отправляем GET-запрос с параметром message
-      const response = await fetch(`https://personal-account-fastapi.onrender.com/answer/?message=${encodedMessage}`, {
-        method: 'GET',
-        credentials: 'include', // Если необходимо, можно оставить credentials
-      });
+      const encodedMessage = encodeURIComponent(inputMessage);
+      const response = await fetch(
+        `https://personal-account-fastapi.onrender.com/answer/?message=${encodedMessage}`,
+        {
+          method: 'GET',
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Ошибка сервера');
       }
 
       const data = await response.json();
-      setMessages([...newMessages, { text: data.answer, sender: 'bot' }]); // Используем ключ 'answer' из ответа
+      setMessages([...newMessages, { text: data.answer, sender: 'bot' }]);
     } catch (error) {
       console.error('Error:', error);
-      setMessages([
-        ...newMessages,
-        { text: 'Чтобы начать пользоваться чат-ботом, войдите в аккаунт', sender: 'bot' },
-      ]);
+      setTimeout(() => {
+        setMessages([
+          ...newMessages,
+          { text: 'Чтобы начать пользоваться чат-ботом, войдите в аккаунт', sender: 'bot' },
+        ]);
+      }, 1000); // Появляется спустя 1 сек после "печати"
+    } finally {
+      setTimeout(() => setIsTyping(false), 800);
     }
   };
 
@@ -67,28 +69,29 @@ const Chat = () => {
   };
 
   return (
-    <div className="flex flex-col h-[400px] max-w-[500px] w-full bg-white shadow-lg rounded-lg p-4 border border-gray-200 ">
-      {/* Список сообщений */}
+    <div className="flex flex-col h-[400px] max-w-[500px] w-full bg-white shadow-lg rounded-lg p-4 border border-gray-200">
       <div className="flex-1 overflow-y-auto space-y-2 p-2">
         {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+          <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
               className={`max-w-[70%] p-3 rounded-xl text-sm shadow ${
-                msg.sender === 'user'
-                  ? 'bg-blue-500 text-white animate-slideInRight'
-                  : 'bg-gray-200 text-black animate-slideInLeft'
+                msg.sender === 'user' ? 'bg-blue-500 text-white animate-slideInRight' : 'bg-gray-200 text-black animate-slideInLeft'
               }`}
             >
               {msg.text}
             </div>
           </div>
         ))}
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="max-w-[70%] p-3 rounded-xl text-sm shadow bg-gray-200 text-black animate-pulse">
+              Чат-бот печатает...
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Поле ввода */}
       <div className="flex items-center mt-2 border-t pt-2 border-gray-300">
         <input
           type="text"

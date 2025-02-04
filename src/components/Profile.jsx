@@ -5,7 +5,7 @@ import { FaUserCircle } from 'react-icons/fa';
 import Form from './Form';
 import ClassifierForm from './MiniClassifier';
 import Chat from './Chat';
-import toast, { Toaster } from 'react-hot-toast';
+
 const Profile = () => {
   const { user, logout, updateUser } = useUser();
   const [activeSection, setActiveSection] = useState(null); // Хранит активный раздел
@@ -32,13 +32,25 @@ const Profile = () => {
   };
   
 
+
+  const handleLogout = async () => {
+    try {
+      await fetch("https://personal-account-fastapi.onrender.com/logout/", { method: "GET", credentials: "include" });
+      logout();
+      window.location.reload();
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+    }
+  };
+
+
   // Получение данных с сервера при загрузке
    // Получение данных профиля
    useEffect(() => {
     const fetchProfileData = async () => {
       try {
         const response = await fetch(
-          "https://personal-account-fastapi.onrender.com/user_data/get/personal",
+          "https://personal-account-fastapi.onrender.com/user/data/get",
           {
             method: "GET",
             credentials: "include",
@@ -65,33 +77,22 @@ const Profile = () => {
 
   // Обработка сохранения данных
   const saveChanges = async () => {
-    const url = isFirstTime
-      ? "https://personal-account-fastapi.onrender.com/user_data/post/personal"
-      : "https://personal-account-fastapi.onrender.com/user_data/put/personal";
-
-    const method = isFirstTime ? "POST" : "PUT";
-
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // для передачи cookies
+      const response = await fetch("https://personal-account-fastapi.onrender.com/user/data/add/or/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(profileData),
       });
 
       if (response.ok) {
-        toast.success(isFirstTime ? "Данные успешно сохранены!" : "Данные успешно обновлены!");
-        
+        alert(isFirstTime ? "Данные успешно сохранены!" : "Данные успешно обновлены!");
         if (isFirstTime) setIsFirstTime(false);
       } else {
-        console.error("Ошибка при сохранении данных:", response.status);
-        toast.error('Ошибка! данные не сохранены');
+        alert("Произошла ошибка при сохранении данных.");
       }
     } catch (error) {
-      console.error("Ошибка при сохранении данных профиля:", error);
-      toast.error('Ошибка !.');
+      alert("Произошла ошибка при сохранении данных.");
     }
   };
 
@@ -116,8 +117,6 @@ const Profile = () => {
   return (
     <div className="flex flex-col font-sans overflow-hidden">
       {/* Header */}
-
-      <Toaster position="top-right" />
       <header
         className="w-full bg-blue-800 text-white shadow-md fixed top-0 z-50"
         style={{
@@ -193,7 +192,7 @@ const Profile = () => {
             {user && (
               <li className="mb-2">
                 <button
-                  onClick={() => {logout();clearCookies();window.location.reload(); }}
+                  onClick={() => {clearCookies();handleLogout();window.location.reload(); }}
                   className="w-full text-left px-6 py-3 focus:outline-none text-gray-200 hover:text-white transition-colors duration-200"
                 >
                   Выход
